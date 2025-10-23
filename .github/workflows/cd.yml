@@ -158,6 +158,13 @@ jobs:
 
             echo "🧩 IMAGE_NAME=$IMAGE_NAME"
             echo "🧩 IMAGE_SHA=$IMAGE_SHA"
+            
+            max_attempts=30; attempt=1
+            until docker manifest inspect "$IMAGE_SHA" >/dev/null 2>&1; do
+              [ $attempt -ge $max_attempts ] && { echo "❌ Chưa có $IMAGE_SHA"; exit 1; }
+              echo "⏳ [$attempt/$max_attempts] waiting registry…"; attempt=$((attempt+1)); sleep 5
+            done
+            
             docker pull "$IMAGE_SHA"
 
             # đảm bảo project name ổn định
