@@ -19,6 +19,9 @@ logs/
 *.log
 .idea/
 
+# screts
+secrets
+
 # env files
 .env
 .env.local

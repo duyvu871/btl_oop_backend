@@ -1,4 +1,4 @@
-name: ci-cd
+name: CI Pipeline
 
 on:
   push:
@@ -59,3 +59,16 @@ jobs:
     outputs:
       image_latest: ${{ env.IMAGE_NAME }}:latest
       image_sha: ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+
+  notify:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Send webhook
+        uses: ./.github/actions/notify
+        with:
+          webhook_url: ${{ secrets.WEBHOOK_URL }}
+          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
