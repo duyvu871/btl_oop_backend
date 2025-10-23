@@ -173,6 +173,9 @@ jobs:
             export COMPOSE_PROJECT_NAME=btl_oop
             export IMAGE_SHA
 
+            echo "🛑 Stop existing containers (if any)"
+            docker compose -f docker-compose.prod.yml down || true
+
             echo "🗄️  Start database dependencies first (postgres, redis, qdrant)"
             docker compose -f docker-compose.prod.yml --env-file .env up -d postgres redis qdrant
 
