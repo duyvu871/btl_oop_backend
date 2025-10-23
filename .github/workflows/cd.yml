@@ -113,26 +113,56 @@ jobs:
             # export DOCKER_HOST=unix:///var/run/docker.sock
 
             echo "🔐 Write .env (chmod 600)"
-            cat > .env <<'EOF'
+            # Export all variables so they can be used in heredoc
+            export DEBUG="${DEBUG}"
+            export FRONTEND_URL="${FRONTEND_URL}"
+            export POSTGRES_USER="${POSTGRES_USER}"
+            export POSTGRES_PASSWORD="${POSTGRES_PASSWORD}"
+            export POSTGRES_SERVER="${POSTGRES_SERVER}"
+            export POSTGRES_DB="${POSTGRES_DB}"
+            export REDIS_URL="${REDIS_URL}"
+            export REDIS_HOST="${REDIS_HOST}"
+            export REDIS_PORT="${REDIS_PORT}"
+            export REDIS_DB="${REDIS_DB}"
+            export QDRANT_URL="${QDRANT_URL}"
+            export SECRET_KEY="${SECRET_KEY}"
+            export ALGORITHM="${ALGORITHM}"
+            export ACCESS_TOKEN_EXPIRE_MINUTES="${ACCESS_TOKEN_EXPIRE_MINUTES}"
+            export SMTP_HOST="${SMTP_HOST}"
+            export SMTP_PORT="${SMTP_PORT}"
+            export SMTP_USER="${SMTP_USER}"
+            export SMTP_PASSWORD="${SMTP_PASSWORD}"
+            export SMTP_FROM="${SMTP_FROM}"
+            export SMTP_TLS="${SMTP_TLS}"
+            export EMAILS_FROM_EMAIL="${EMAILS_FROM_EMAIL}"
+            export EMAILS_FROM_NAME="${EMAILS_FROM_NAME}"
+            export SENTRY_DSN="${SENTRY_DSN}"
+            export ARQ_QUEUE_NAME="${ARQ_QUEUE_NAME}"
+            export ARQ_MAX_JOBS="${ARQ_MAX_JOBS}"
+            export ARQ_JOB_TIMEOUT="${ARQ_JOB_TIMEOUT}"
+            export FIRST_SUPERUSER="${FIRST_SUPERUSER}"
+            export FIRST_SUPERUSER_PASSWORD="${FIRST_SUPERUSER_PASSWORD}"
+            
+            cat > .env <<EOF
             DEBUG=${DEBUG}
             FRONTEND_URL=${FRONTEND_URL}
-
+            
             POSTGRES_USER=${POSTGRES_USER}
             POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
             POSTGRES_SERVER=${POSTGRES_SERVER}
             POSTGRES_DB=${POSTGRES_DB}
-
+            
             REDIS_URL=${REDIS_URL}
             REDIS_HOST=${REDIS_HOST}
             REDIS_PORT=${REDIS_PORT}
             REDIS_DB=${REDIS_DB}
-
+            
             QDRANT_URL=${QDRANT_URL}
-
+            
             SECRET_KEY=${SECRET_KEY}
             ALGORITHM=${ALGORITHM}
             ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
-
+            
             SMTP_HOST=${SMTP_HOST}
             SMTP_PORT=${SMTP_PORT}
             SMTP_USER=${SMTP_USER}
@@ -141,17 +171,26 @@ jobs:
             SMTP_TLS=${SMTP_TLS}
             EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
             EMAILS_FROM_NAME=${EMAILS_FROM_NAME}
-
+            
             SENTRY_DSN=${SENTRY_DSN}
-
+            
             ARQ_QUEUE_NAME=${ARQ_QUEUE_NAME}
             ARQ_MAX_JOBS=${ARQ_MAX_JOBS}
             ARQ_JOB_TIMEOUT=${ARQ_JOB_TIMEOUT}
-
+            
             FIRST_SUPERUSER=${FIRST_SUPERUSER}
             FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD}
             EOF
             chmod 600 .env
+            
+            echo "✅ .env file created. Validating critical vars..."
+            if grep -q "SECRET_KEY=" .env && grep -q "POSTGRES_USER=" .env; then
+              echo "✅ Critical env vars present"
+            else
+              echo "❌ Missing critical env vars in .env file!"
+              cat .env
+              exit 1
+            fi
 
             echo "🐳 Docker login & pull image"
             # tránh credsStore=pass → dùng cấu hình tạm
@@ -200,8 +239,26 @@ jobs:
             echo "🚀 Bring up FastAPI application"
             docker compose -f docker-compose.prod.yml --env-file .env up -d fastapi
 
+            echo "⏳ Wait for fastapi to start..."
+            sleep 10
+
+            echo "📋 Check fastapi container status:"
+            docker compose -f docker-compose.prod.yml ps fastapi
+
+            # Check if fastapi container is running
+            if docker compose -f docker-compose.prod.yml ps fastapi | grep -q "Up"; then
+              echo "✅ FastAPI container is running"
+            else
+              echo "❌ FastAPI container is NOT running! Showing logs:"
+              docker compose -f docker-compose.prod.yml logs --tail=100 fastapi
+              exit 1
+            fi
+
             echo "🛠️  Bring up worker"
             docker compose -f docker-compose.prod.yml --env-file .env up -d worker_send_mail
+
+            echo "📋 All running containers:"
+            docker compose -f docker-compose.prod.yml ps
 
 #            echo "🧹 Cleanup"
 #            docker image prune -f

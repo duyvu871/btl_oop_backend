@@ -9,6 +9,7 @@ requires-python = ">=3.10"
 dependencies = [
     "fastapi",
     "uvicorn",
+    "gunicorn",
     "langchain",
     "qdrant-client",
     "psycopg[binary]",
