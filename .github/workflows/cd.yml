@@ -19,6 +19,12 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     steps:
+      - name: Debug file tree
+        run: |
+          echo "📂 Current workspace:"
+          pwd
+          ls -R .      
+
       - name: Checkout code
         uses: actions/checkout@v5
       - name: Upload compose to server
@@ -30,7 +36,6 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           source: "backend/docker-compose.prod.yml"
           target: "${{ secrets.DEPLOY_PATH || '~/src/btl_oop_ptit' }}/"
-
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
@@ -186,6 +191,8 @@ jobs:
 
   notify:
     runs-on: ubuntu-latest
+    needs:
+      - deploy
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     permissions:
       actions: read
