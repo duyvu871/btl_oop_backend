@@ -1,9 +1,9 @@
 services:
   fastapi:
-    image: adc300/btl_oop:latest
+    image: ${IMAGE_SHA:-adc300/btl_oop:latest}
     restart: always
     env_file:
-      - .env.prod
+      - .env
     environment:
       - DEBUG=False
       - FRONTEND_URL=${FRONTEND_URL}
@@ -57,10 +57,10 @@ services:
           memory: 512M
 
   worker_send_mail:
-    image: adc300/btl_oop:latest
+    image: ${IMAGE_SHA:-adc300/btl_oop:latest}
     restart: always
     env_file:
-      - .env.prod
+      - .env
     environment:
       - DEBUG=False
       - FRONTEND_URL=${FRONTEND_URL}

@@ -200,8 +200,8 @@ jobs:
             echo "🛠️  Bring up worker"
             docker compose -f docker-compose.prod.yml --env-file .env up -d worker_send_mail
 
-            echo "🧹 Cleanup"
-            docker image prune -f
+#            echo "🧹 Cleanup"
+#            docker image prune -f
 
       - name: Health check
         run: |
