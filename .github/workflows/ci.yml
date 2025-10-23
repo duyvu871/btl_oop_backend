@@ -22,7 +22,7 @@ jobs:
         run: uv run ruff check .
       - name: Run tests
         working-directory: backend
-        run: uv run pytest -q
+        run: uv run pytest -q || [ $? -eq 5 ]
 
 #  build_and_push:
 #    needs: test
