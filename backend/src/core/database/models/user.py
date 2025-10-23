@@ -1,13 +1,20 @@
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
 from enum import Enum as PyEnum
+from typing import TYPE_CHECKING
 
-from sqlalchemy.sql.functions import func
-from sqlalchemy import String, DateTime, Enum, Boolean
-from sqlalchemy.dialects.postgresql import UUID, ARRAY, BOOLEAN
+from sqlalchemy import Boolean, DateTime, Enum, String
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql.functions import func
 
 from src.core.database.database import Base
+
+if TYPE_CHECKING:
+    from .history import History
+    from .pantry import Pantry
 
 
 class Role(PyEnum):
@@ -31,5 +38,5 @@ class User(Base):
     )
 
     # Relationships
-    pantry: Mapped[list["Pantry"]] = relationship("Pantry", back_populates="user")
-    histories: Mapped[list["History"]] = relationship("History", back_populates="user")
+    pantry: Mapped[list[Pantry]] = relationship("Pantry", back_populates="user")  # noqa: F821
+    histories: Mapped[list[History]] = relationship("History", back_populates="user")  # noqa: F821

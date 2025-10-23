@@ -1,7 +1,7 @@
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, field_validator, Field, ConfigDict
-from typing import List
 from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class UserCreate(BaseModel):
@@ -30,5 +30,5 @@ class UserRead(BaseModel):
     id: UUID
     email: str
     role: str
-    preferences: List[str]
+    preferences: list[str]
     created_at: datetime

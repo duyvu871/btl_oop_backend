@@ -1,15 +1,17 @@
 # src/security.py
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+
+import jwt
 from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError, InvalidHashError
-from fastapi.security import OAuth2PasswordBearer
+from argon2.exceptions import InvalidHashError, VerifyMismatchError
 from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-import jwt
-from src.settings.env import settings
-from src.core.database.models.user import User
+
 from src.core.database.database import get_db
+from src.core.database.models.user import User
+from src.settings.env import settings
 
 # Password hasher using Argon2
 ph = PasswordHasher()
@@ -34,9 +36,9 @@ def get_password_hash(password: str) -> str:
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        expire = datetime.now(UTC) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt

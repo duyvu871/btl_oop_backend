@@ -1,11 +1,10 @@
-from typing import List
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     API_PREFIX: str = "/api/v1"
-    CORS_ORIGINS: List[str] = ["*"]
+    CORS_ORIGINS: list[str] = ["*"]
     # Database settings
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str

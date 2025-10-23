@@ -1,8 +1,8 @@
 """
 Use case: Generate and send email verification code.
 """
-from typing import Optional
-from src.core.verification import VerificationService, VerificationOptions
+
+from src.core.verification import VerificationOptions, VerificationService
 from src.workers.helpers import queue_verification_email
 
 
@@ -29,12 +29,12 @@ class GenerateEmailVerificationUseCase:
         self,
         email: str,
         ttl_sec: int = 600,
-        user_name: Optional[str] = None,
-        user_email: Optional[str] = None,
+        user_name: str | None = None,
+        user_email: str | None = None,
         expiry_hours: int = 24,
-        company_name: Optional[str] = None,
-        logo_url: Optional[str] = None,
-        custom_message: Optional[str] = None,
+        company_name: str | None = None,
+        logo_url: str | None = None,
+        custom_message: str | None = None,
     ) -> str:
         """
         Execute the use case.

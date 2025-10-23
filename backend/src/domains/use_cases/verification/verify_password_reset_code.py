@@ -1,7 +1,7 @@
 """
 Use case: Verify password reset code.
 """
-from src.core.verification import VerificationService, VerificationOptions
+from src.core.verification import VerificationOptions, VerificationService
 
 
 class VerifyPasswordResetCodeUseCase:

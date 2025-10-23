@@ -1,9 +1,18 @@
-from sqlalchemy import String, ForeignKey
+from __future__ import annotations
+
+import uuid
+from typing import TYPE_CHECKING
+
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-import uuid
 
 from src.core.database.database import Base
+
+if TYPE_CHECKING:
+    from .pantry import Pantry
+    from .recipe import Recipe
+
 
 class Ingredient(Base):
     """Ingredient model for recipe ingredients."""
@@ -16,5 +25,5 @@ class Ingredient(Base):
     unit: Mapped[str] = mapped_column(String, nullable=False)  # Measurement unit
 
     # Relationships
-    recipe: Mapped["Recipe"] = relationship("Recipe", back_populates="ingredients")
-    pantries: Mapped[list["Pantry"]] = relationship("Pantry", back_populates="ingredient")
+    recipe: Mapped[Recipe] = relationship("Recipe", back_populates="ingredients")  # noqa: F821
+    pantries: Mapped[list[Pantry]] = relationship("Pantry", back_populates="ingredient")  # noqa: F821

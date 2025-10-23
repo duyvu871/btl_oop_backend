@@ -1,11 +1,18 @@
-from datetime import datetime
+from __future__ import annotations
 
-from sqlalchemy import String, DateTime, ForeignKey
+import uuid
+from datetime import datetime
+from typing import TYPE_CHECKING
+
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-import uuid
 
 from src.core.database.database import Base
+
+if TYPE_CHECKING:
+    from .ingredient import Ingredient
+    from .user import User
 
 
 class Pantry(Base):
@@ -19,5 +26,5 @@ class Pantry(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)  # Expiration date
 
     # Relationships
-    user: Mapped["User"] = relationship("User", back_populates="pantry")
-    ingredient: Mapped["Ingredient"] = relationship("Ingredient", back_populates="pantries")
+    user: Mapped[User] = relationship("User", back_populates="pantry")  # noqa: F821
+    ingredient: Mapped[Ingredient] = relationship("Ingredient", back_populates="pantries")  # noqa: F821

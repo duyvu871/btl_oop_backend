@@ -1,11 +1,19 @@
+from __future__ import annotations
+
+import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-import uuid
 
 from src.core.database.database import Base
+
+if TYPE_CHECKING:
+    from .recipe import Recipe
+    from .user import User
+
 
 class History(Base):
     """History model for user's recipe interactions."""
@@ -17,5 +25,5 @@ class History(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     # Relationships
-    user: Mapped["User"] = relationship("User", back_populates="histories")
-    recipe: Mapped["Recipe"] = relationship("Recipe", back_populates="histories")
+    user: Mapped[User] = relationship("User", back_populates="histories")  # noqa: F821
+    recipe: Mapped[Recipe] = relationship("Recipe", back_populates="histories")  # noqa: F821

@@ -1,6 +1,7 @@
 from enum import Enum
+from typing import Any
+
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, Dict, Any
 
 
 class EmailType(str, Enum):
@@ -23,21 +24,21 @@ class VerificationEmailTask(EmailTask):
     """Schema for verification email task."""
     email_type: EmailType = Field(default=EmailType.VERIFICATION, frozen=True)
     verification_token: str = Field(..., min_length=1)
-    user_name: Optional[str] = Field(default=None, description="User's display name")
-    user_email: Optional[str] = Field(default=None, description="User's email for display")
-    expiry_hours: Optional[int] = Field(default=24, description="Hours until verification link expires")
-    company_name: Optional[str] = Field(default=None, description="Company/App name")
-    logo_url: Optional[str] = Field(default=None, description="Company logo URL")
-    custom_message: Optional[str] = Field(default=None, description="Additional custom message")
+    user_name: str | None = Field(default=None, description="User's display name")
+    user_email: str | None = Field(default=None, description="User's email for display")
+    expiry_hours: int | None = Field(default=24, description="Hours until verification link expires")
+    company_name: str | None = Field(default=None, description="Company/App name")
+    logo_url: str | None = Field(default=None, description="Company logo URL")
+    custom_message: str | None = Field(default=None, description="Additional custom message")
 
 
 class PasswordResetEmailTask(EmailTask):
     """Schema for password reset email task."""
     email_type: EmailType = Field(default=EmailType.PASSWORD_RESET, frozen=True)
     reset_token: str = Field(..., min_length=1)
-    user_name: Optional[str] = Field(default=None, description="User's display name")
-    expiry_hours: Optional[int] = Field(default=1, description="Hours until reset link expires")
-    company_name: Optional[str] = Field(default=None, description="Company/App name")
+    user_name: str | None = Field(default=None, description="User's display name")
+    expiry_hours: int | None = Field(default=1, description="Hours until reset link expires")
+    company_name: str | None = Field(default=None, description="Company/App name")
 
 
 class CustomEmailTask(EmailTask):
@@ -45,5 +46,5 @@ class CustomEmailTask(EmailTask):
     email_type: EmailType = Field(default=EmailType.CUSTOM, frozen=True)
     subject: str = Field(..., min_length=1, max_length=200)
     html_content: str = Field(..., min_length=1)
-    text_content: Optional[str] = None
-    context: Optional[Dict[str, Any]] = None
+    text_content: str | None = None
+    context: dict[str, Any] | None = None

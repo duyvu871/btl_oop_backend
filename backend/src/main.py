@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from scalar_fastapi import get_scalar_api_reference, Theme
+from scalar_fastapi import Theme, get_scalar_api_reference
 
 from src.api.v1.main import api_router
 from src.settings.env import settings

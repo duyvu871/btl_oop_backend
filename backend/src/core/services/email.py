@@ -1,9 +1,8 @@
+import logging
 import smtplib
 import ssl
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from typing import List
-import logging
+from email.mime.text import MIMEText
 
 from src.core.template import render_email
 from src.settings.env import settings
@@ -12,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def send_email(
-    to: str | List[str],
+    to: str | list[str],
     subject: str,
     html_content: str,
     text_content: str | None = None,

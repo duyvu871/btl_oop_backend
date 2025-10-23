@@ -1,18 +1,18 @@
-from enum import Enum
+from datetime import timedelta
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-from datetime import timedelta
 
 from src.core.database.database import get_db
 from src.core.database.models.user import User
-from src.core.security import create_access_token, get_current_user, get_password_hash, verify_password, get_verified_user
 from src.core.decorator.timer import timer
+from src.core.security import create_access_token, get_password_hash, get_verified_user, verify_password
+from src.domains.use_cases.verification import VerificationUseCase, get_verification_usecase
 from src.schemas.user import UserCreate, UserRead
 from src.settings.env import settings
-from src.domains.use_cases.verification import VerificationUseCase, get_verification_usecase
 
 router = APIRouter(
     prefix="/auth",

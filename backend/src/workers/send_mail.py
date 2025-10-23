@@ -2,29 +2,28 @@
 ARQ Worker for sending emails asynchronously via Redis queue.
 """
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from arq import create_pool
-from arq.connections import RedisSettings, ArqRedis
-from redis.asyncio import Redis
+from arq.connections import ArqRedis, RedisSettings
 
-from src.settings.env import settings
 from src.core.services.email import (
     send_email,
-    send_verification_email,
     send_password_reset_email,
+    send_verification_email,
 )
 from src.schemas.workers.send_mail import (
-    EmailType,
-    VerificationEmailTask,
-    PasswordResetEmailTask,
     CustomEmailTask,
+    EmailType,
+    PasswordResetEmailTask,
+    VerificationEmailTask,
 )
+from src.settings.env import settings
 
 logger = logging.getLogger(__name__)
 
 
-async def send_email_task(ctx: Dict[str, Any], email_data: Dict[str, Any]) -> bool:
+async def send_email_task(ctx: dict[str, Any], email_data: dict[str, Any]) -> bool:
     """
     ARQ task to send emails based on email type.
 
@@ -116,7 +115,7 @@ async def send_email_task(ctx: Dict[str, Any], email_data: Dict[str, Any]) -> bo
         raise
 
 
-async def startup(ctx: Dict[str, Any]) -> None:
+async def startup(ctx: dict[str, Any]) -> None:
     """
     Worker startup function - runs when worker starts.
     Initialize connections here if needed.
@@ -125,7 +124,7 @@ async def startup(ctx: Dict[str, Any]) -> None:
     ctx["startup_complete"] = True
 
 
-async def shutdown(ctx: Dict[str, Any]) -> None:
+async def shutdown(ctx: dict[str, Any]) -> None:
     """
     Worker shutdown function - runs when worker stops.
     Clean up connections here if needed.
@@ -174,7 +173,7 @@ async def get_redis_pool() -> ArqRedis:
     )
 
 
-async def enqueue_email(email_data: Dict[str, Any]) -> str | None:
+async def enqueue_email(email_data: dict[str, Any]) -> str | None:
     """
     Enqueue an email task to be processed by the worker.
 

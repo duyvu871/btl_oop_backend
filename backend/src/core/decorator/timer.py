@@ -1,6 +1,7 @@
 import time
 from functools import wraps
 
+
 def timer(func):
     """Custom decorator for timing async functions."""
     @wraps(func)

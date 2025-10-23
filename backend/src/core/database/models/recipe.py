@@ -1,11 +1,20 @@
-from datetime import datetime
+from __future__ import annotations
 
-from sqlalchemy import String, Text, Float, DateTime
-from sqlalchemy.dialects.postgresql import UUID, ARRAY
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 import uuid
+from datetime import datetime
+from typing import TYPE_CHECKING
+
+from sqlalchemy import DateTime, Float, String, Text
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database.database import Base
+
+if TYPE_CHECKING:
+    from .history import History
+    from .ingredient import Ingredient
+    from .step import Step
+
 
 class Recipe(Base):
     """Recipe model representing a recipe in the system."""
@@ -17,9 +26,9 @@ class Recipe(Base):
     thumbnail: Mapped[str] = mapped_column(String, nullable=True)  # Optional image
     tutorial: Mapped[str] = mapped_column(Text, nullable=False)
     quantitative: Mapped[str] = mapped_column(Text, nullable=False)
-    ingredientTitle: Mapped[str] = mapped_column(Text, nullable=False)
-    ingredientMarkdown: Mapped[str] = mapped_column(Text, nullable=False)
-    stepMarkdown: Mapped[str] = mapped_column(Text, nullable=False)
+    ingredientTitle: Mapped[str] = mapped_column(Text, nullable=False)  # noqa: N815
+    ingredientMarkdown: Mapped[str] = mapped_column(Text, nullable=False)  # noqa: N815
+    stepMarkdown: Mapped[str] = mapped_column(Text, nullable=False)  # noqa: N815
     embedded_ingredient: Mapped[list[float]] = mapped_column(ARRAY(Float, dimensions=1), nullable=True, default=[])  # vector(3072)
     embedded_name: Mapped[list[float]] = mapped_column(ARRAY(Float, dimensions=1), nullable=True, default=[])        # vector(3072)
 
@@ -27,6 +36,6 @@ class Recipe(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    tutorial_steps: Mapped[list["Step"]] = relationship("Step", back_populates="recipe")
-    ingredients: Mapped[list["Ingredient"]] = relationship("Ingredient", back_populates="recipe")
-    histories: Mapped[list["History"]] = relationship("History", back_populates="recipe")
+    tutorial_steps: Mapped[list[Step]] = relationship("Step", back_populates="recipe")  # noqa: F821
+    ingredients: Mapped[list[Ingredient]] = relationship("Ingredient", back_populates="recipe")  # noqa: F821
+    histories: Mapped[list[History]] = relationship("History", back_populates="recipe")  # noqa: F821

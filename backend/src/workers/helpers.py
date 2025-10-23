@@ -1,16 +1,16 @@
 """
 Helper utilities for working with ARQ email worker.
 """
-from typing import Dict, Any, Optional
 import logging
+from typing import Any
 
-from src.workers.send_mail import enqueue_email
 from src.schemas.workers.send_mail import (
-    EmailType,
-    VerificationEmailTask,
-    PasswordResetEmailTask,
     CustomEmailTask,
+    EmailType,
+    PasswordResetEmailTask,
+    VerificationEmailTask,
 )
+from src.workers.send_mail import enqueue_email
 
 logger = logging.getLogger(__name__)
 
@@ -18,12 +18,12 @@ logger = logging.getLogger(__name__)
 async def queue_verification_email(
     email: str,
     verification_token: str,
-    user_name: Optional[str] = None,
-    user_email: Optional[str] = None,
+    user_name: str | None = None,
+    user_email: str | None = None,
     expiry_hours: int = 24,
-    company_name: Optional[str] = None,
-    logo_url: Optional[str] = None,
-    custom_message: Optional[str] = None,
+    company_name: str | None = None,
+    logo_url: str | None = None,
+    custom_message: str | None = None,
 ) -> str | None:
     """
     Queue a verification email to be sent.
@@ -58,9 +58,9 @@ async def queue_verification_email(
 async def queue_password_reset_email(
     email: str,
     reset_token: str,
-    user_name: Optional[str] = None,
+    user_name: str | None = None,
     expiry_hours: int = 1,
-    company_name: Optional[str] = None,
+    company_name: str | None = None,
 ) -> str | None:
     """
     Queue a password reset email to be sent.
@@ -91,7 +91,7 @@ async def queue_custom_email(
     subject: str,
     html_content: str,
     text_content: str | None = None,
-    context: Dict[str, Any] | None = None
+    context: dict[str, Any] | None = None
 ) -> str | None:
     """
     Queue a custom email to be sent.

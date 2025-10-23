@@ -4,16 +4,14 @@ Supports email verification, password reset, and other verification flows.
 """
 import secrets
 import time
-from typing import Optional, Literal
 from dataclasses import dataclass
 
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHashError, VerifyMismatchError
 from fastapi import Depends
 from redis.asyncio import Redis
-from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError, InvalidHashError
 
 from src.core.redis.provider import get_redis
-from src.settings.env import settings
 
 
 @dataclass
@@ -228,7 +226,7 @@ class VerificationService:
         self,
         namespace: str,
         subject: str
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Get remaining verification attempts.
 

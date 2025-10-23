@@ -2,13 +2,14 @@
 Helper class for verification use cases.
 Provides convenient wrappers around use cases with dependency injection support.
 """
-from typing import Optional
+
 from fastapi import Depends
 
 from src.core.verification import VerificationService, get_verification_service
+
 from .generate_email_verification import GenerateEmailVerificationUseCase
-from .verify_email_code import VerifyEmailCodeUseCase
 from .generate_password_reset import GeneratePasswordResetUseCase
+from .verify_email_code import VerifyEmailCodeUseCase
 from .verify_password_reset_code import VerifyPasswordResetCodeUseCase
 
 
@@ -46,12 +47,12 @@ class VerificationUseCase:
         self,
         email: str,
         ttl_sec: int = 600,
-        user_name: Optional[str] = None,
-        user_email: Optional[str] = None,
+        user_name: str | None = None,
+        user_email: str | None = None,
         expiry_hours: int = 24,
-        company_name: Optional[str] = None,
-        logo_url: Optional[str] = None,
-        custom_message: Optional[str] = None,
+        company_name: str | None = None,
+        logo_url: str | None = None,
+        custom_message: str | None = None,
     ) -> str:
         """
         Generate and send email verification code.
