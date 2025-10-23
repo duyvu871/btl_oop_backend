@@ -37,7 +37,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "./docker-compose.prod.yml"   # chỉnh path nếu file nằm ở backend/
+          source: "./docker-compose.prod.yml"s
           target: "${{ secrets.DEPLOY_PATH }}/"
 
       - name: Deploy to server via SSH
@@ -104,7 +104,9 @@ jobs:
             DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
             mkdir -p "$DEPLOY_PATH"
             cd "$DEPLOY_PATH"
-
+            
+            echo "📂 Current directory: $(pwd)"
+            
             # Nếu server cần sudo cho Docker CE, bật 3 dòng này và prefix 'sudo -E' cho mọi lệnh docker:
             # alias docker='sudo -E docker'
             # alias compose='sudo -E docker compose'
@@ -171,14 +173,31 @@ jobs:
             export COMPOSE_PROJECT_NAME=btl_oop
             export IMAGE_SHA
 
-            echo "🔄 Alembic migrate (one-off)"
+            echo "🗄️  Start database dependencies first (postgres, redis, qdrant)"
+            docker compose -f docker-compose.prod.yml --env-file .env up -d postgres redis qdrant
+
+            echo "⏳ Wait for postgres to be healthy..."
+            timeout=60
+            elapsed=0
+            until docker compose -f docker-compose.prod.yml exec postgres pg_isready -U "${POSTGRES_USER}" > /dev/null 2>&1; do
+              if [ $elapsed -ge $timeout ]; then
+                echo "❌ Postgres failed to become healthy in ${timeout}s"
+                exit 1
+              fi
+              echo "Waiting for postgres... (${elapsed}s/${timeout}s)"
+              sleep 5
+              elapsed=$((elapsed + 5))
+            done
+            echo "✅ Postgres is ready!"
+
+            echo "🔄 Run Alembic migrations"
             docker compose -f docker-compose.prod.yml --env-file .env run --rm \
               fastapi uv run alembic upgrade head
 
-            echo "🚀 Bring up API"
+            echo "🚀 Bring up FastAPI application"
             docker compose -f docker-compose.prod.yml --env-file .env up -d fastapi
 
-            echo "🛠️  Bring up worker (optional)"
+            echo "🛠️  Bring up worker"
             docker compose -f docker-compose.prod.yml --env-file .env up -d worker_send_mail
 
             echo "🧹 Cleanup"
