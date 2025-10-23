@@ -90,7 +90,7 @@ jobs:
           script: |
             set -euo pipefail
             
-            DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/home/' }}${{ secrets.SSH_USERNAME }}/src/btl_oop_ptit"
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '~/src/btl_oop_ptit' }}"
             mkdir -p "$DEPLOY_PATH"
             cd "$DEPLOY_PATH"
             
