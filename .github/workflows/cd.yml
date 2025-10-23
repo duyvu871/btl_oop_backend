@@ -3,14 +3,12 @@ name: CD Pipeline
 on:
   workflow_run:
     workflows: ["CI Pipeline"]
-    types:
-      - completed
-    branches:
-      - main
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: adc300/btl_oop
+  IMAGE_NAME: adc300/btl_oop   # repo image trên Docker Hub của bạn
 
 jobs:
   deploy:
@@ -21,17 +19,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-#      - name: Debug backend files
-#        run: |
-#          echo "Current workspace:"
-#          pwd
-#          echo "Backend directory contents:"
-#          ls -R ./backend || echo "Backend folder not found!"
-#      - name: Debug file tree
-#        run: |
-#          echo "📂 Current workspace:"
-#          pwd
-#          ls -R .
+
+      - name: Compute image tags (method #1)
+        run: |
+          CI_SHA="${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}"
+          echo "IMAGE_LATEST=${{ env.IMAGE_NAME }}:latest" >> $GITHUB_ENV
+          echo "IMAGE_SHA=${{ env.IMAGE_NAME }}:sha-${CI_SHA}" >> $GITHUB_ENV
+          echo "Computed:"
+          echo "  IMAGE_LATEST=$IMAGE_LATEST"
+          echo "  IMAGE_SHA=$IMAGE_SHA"
+
       - name: Upload compose to server
         uses: appleboy/scp-action@v1
         with:
@@ -39,30 +36,40 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "./docker-compose.prod.yml"
-          target: "${{ secrets.DEPLOY_PATH || '~/src/btl_oop_ptit' }}/"
+          source: "./docker-compose.prod.yml"   # chỉnh path nếu file nằm ở backend/
+          target: "${{ secrets.DEPLOY_PATH }}/"
+
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
-          # General
+          # Image vars tính ở bước trước
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_SHA:  ${{ env.IMAGE_SHA }}
+
+          # App vars
           DEBUG: ${{ secrets.DEBUG || 'False' }}
           FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+
           # Database
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_SERVER: ${{ secrets.POSTGRES_SERVER || 'postgres' }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+
           # Redis
-          REDIS_URL: ${{ secrets.REDIS_URL || 'redis://redis:6379' }}
+          REDIS_URL:  ${{ secrets.REDIS_URL  || 'redis://redis:6379' }}
           REDIS_HOST: ${{ secrets.REDIS_HOST || 'redis' }}
           REDIS_PORT: ${{ secrets.REDIS_PORT || '6379' }}
-          REDIS_DB: ${{ secrets.REDIS_DB || '0' }}
+          REDIS_DB:   ${{ secrets.REDIS_DB   || '0' }}
+
           # Qdrant
           QDRANT_URL: ${{ secrets.QDRANT_URL || 'http://qdrant:6333' }}
+
           # Security / JWT
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          ALGORITHM: ${{ secrets.ALGORITHM || 'HS256' }}
+          ALGORITHM:  ${{ secrets.ALGORITHM || 'HS256' }}
           ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES || '30' }}
+
           # Email / SMTP
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
@@ -72,55 +79,58 @@ jobs:
           SMTP_TLS: ${{ secrets.SMTP_TLS }}
           EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
           EMAILS_FROM_NAME: ${{ secrets.EMAILS_FROM_NAME }}
+
           # Sentry
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+
           # ARQ Worker
           ARQ_QUEUE_NAME: ${{ secrets.ARQ_QUEUE_NAME || 'arq:queue' }}
-          ARQ_MAX_JOBS: ${{ secrets.ARQ_MAX_JOBS || '10' }}
+          ARQ_MAX_JOBS:   ${{ secrets.ARQ_MAX_JOBS   || '10' }}
           ARQ_JOB_TIMEOUT: ${{ secrets.ARQ_JOB_TIMEOUT || '300' }}
+
           # Superuser
-          FIRST_SUPERUSER: ${{ secrets.FIRST_SUPERUSER }}
+          FIRST_SUPERUSER:          ${{ secrets.FIRST_SUPERUSER }}
           FIRST_SUPERUSER_PASSWORD: ${{ secrets.FIRST_SUPERUSER_PASSWORD }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
-          envs: DEBUG,FRONTEND_URL,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_SERVER,POSTGRES_DB,REDIS_URL,REDIS_HOST,REDIS_PORT,REDIS_DB,QDRANT_URL,SECRET_KEY,ALGORITHM,ACCESS_TOKEN_EXPIRE_MINUTES,SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASSWORD,SMTP_FROM,SMTP_TLS,EMAILS_FROM_EMAIL,EMAILS_FROM_NAME,SENTRY_DSN,ARQ_QUEUE_NAME,ARQ_MAX_JOBS,ARQ_JOB_TIMEOUT,FIRST_SUPERUSER,FIRST_SUPERUSER_PASSWORD
+          # Truyền các env này sang phiên SSH (để script nhìn thấy)
+          envs: IMAGE_NAME,IMAGE_SHA,DEBUG,FRONTEND_URL,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_SERVER,POSTGRES_DB,REDIS_URL,REDIS_HOST,REDIS_PORT,REDIS_DB,QDRANT_URL,SECRET_KEY,ALGORITHM,ACCESS_TOKEN_EXPIRE_MINUTES,SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASSWORD,SMTP_FROM,SMTP_TLS,EMAILS_FROM_EMAIL,EMAILS_FROM_NAME,SENTRY_DSN,ARQ_QUEUE_NAME,ARQ_MAX_JOBS,ARQ_JOB_TIMEOUT,FIRST_SUPERUSER,FIRST_SUPERUSER_PASSWORD
           script: |
             set -euo pipefail
-            
-            DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '~/src/btl_oop_ptit' }}"
+
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
             mkdir -p "$DEPLOY_PATH"
             cd "$DEPLOY_PATH"
-            
+
+            # Nếu server cần sudo cho Docker CE, bật 3 dòng này và prefix 'sudo -E' cho mọi lệnh docker:
+            # alias docker='sudo -E docker'
+            # alias compose='sudo -E docker compose'
+            # export DOCKER_HOST=unix:///var/run/docker.sock
+
             echo "🔐 Write .env (chmod 600)"
             cat > .env <<'EOF'
-            # ---- Runtime env (KHÔNG commit file này) ----
             DEBUG=${DEBUG}
             FRONTEND_URL=${FRONTEND_URL}
-            
-            # Postgres database
+
             POSTGRES_USER=${POSTGRES_USER}
             POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
             POSTGRES_SERVER=${POSTGRES_SERVER}
             POSTGRES_DB=${POSTGRES_DB}
-            
-            # Redis
+
             REDIS_URL=${REDIS_URL}
             REDIS_HOST=${REDIS_HOST}
             REDIS_PORT=${REDIS_PORT}
             REDIS_DB=${REDIS_DB}
-            
-            # Qdrant
+
             QDRANT_URL=${QDRANT_URL}
-            
-            # JWT
+
             SECRET_KEY=${SECRET_KEY}
             ALGORITHM=${ALGORITHM}
             ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
-            
-            # SMTP / Email
+
             SMTP_HOST=${SMTP_HOST}
             SMTP_PORT=${SMTP_PORT}
             SMTP_USER=${SMTP_USER}
@@ -129,84 +139,53 @@ jobs:
             SMTP_TLS=${SMTP_TLS}
             EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
             EMAILS_FROM_NAME=${EMAILS_FROM_NAME}
-            
-            # Sentry
+
             SENTRY_DSN=${SENTRY_DSN}
-            
-            # ARQ Worker
+
             ARQ_QUEUE_NAME=${ARQ_QUEUE_NAME}
             ARQ_MAX_JOBS=${ARQ_MAX_JOBS}
             ARQ_JOB_TIMEOUT=${ARQ_JOB_TIMEOUT}
-            
-            # Superuser
+
             FIRST_SUPERUSER=${FIRST_SUPERUSER}
             FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD}
             EOF
             chmod 600 .env
-            
+
             echo "🐳 Docker login & pull image"
+            # tránh credsStore=pass → dùng cấu hình tạm
             export DOCKER_CONFIG="$(mktemp -d)"
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-            docker pull "${{ needs.build_and_push.outputs.image_sha }}"
-            
-            # Gợi ý: trong docker-compose.prod.yml đặt image = IMAGE_SHA để up đúng tag
-            # hoặc dùng env var để override khi up:
-            # COMPOSE_PROJECT_NAME giúp tên container ổn định giữa các deploy
+
+            echo "🧩 IMAGE_NAME=$IMAGE_NAME"
+            echo "🧩 IMAGE_SHA=$IMAGE_SHA"
+            docker pull "$IMAGE_SHA"
+
+            # đảm bảo project name ổn định
             export COMPOSE_PROJECT_NAME=btl_oop
-            export IMAGE_SHA="${{ needs.build_and_push.outputs.image_sha }}"
-            
-            # 1) Migrate DB bằng one-off container (ít downtime, cùng image mới)
-            echo "🔄 Alembic migrate"
+            export IMAGE_SHA
+
+            echo "🔄 Alembic migrate (one-off)"
             docker compose -f docker-compose.prod.yml --env-file .env run --rm \
-            -e DATABASE_URL -e SECRET_KEY -e ALGORITHM \
-            fastapi uv run alembic upgrade head
-            
-            # 2) Khởi động/refresh API với image mới
+              fastapi uv run alembic upgrade head
+
             echo "🚀 Bring up API"
             docker compose -f docker-compose.prod.yml --env-file .env up -d fastapi
-            
-            # 3) (Optional) restart phụ trợ khác (worker, nginx...) nếu có
-            docker compose -f docker-compose.prod.yml up -d worker_send_mail
-            
-            # 4) Cleanup image treo
+
+            echo "🛠️  Bring up worker (optional)"
+            docker compose -f docker-compose.prod.yml --env-file .env up -d worker_send_mail
+
+            echo "🧹 Cleanup"
             docker image prune -f
 
       - name: Health check
         run: |
           echo "Waiting for application to start..."
-          sleep 30
-          
-          # Check if the application is responding
-          response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.SSH_HOST }}:8000/health || echo "000")
-          
-          if [ "$response" = "200" ]; then
-            echo "✅ Application is healthy!"
-          else
-            echo "⚠️  Health check returned: $response"
-            echo "Please check the application manually"
-          fi
+          sleep 20
+          code=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.SSH_HOST }}:8000/health" || echo "000")
+          echo "HTTP $code"
+          [ "$code" = "200" ] && echo "✅ Healthy" || echo "⚠️ Not healthy"
 
       - name: Notify deployment status
         if: always()
         run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            echo "🚀 Deployment successful!"
-          else
-            echo "❌ Deployment failed!"
-          fi
-
-#  notify:
-#    runs-on: ubuntu-latest
-#    needs:
-#      - deploy
-#    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
-#    permissions:
-#      actions: read
-#      contents: read
-#    steps:
-#      - uses: actions/checkout@v5
-#      - name: Send webhook
-#        uses: ./.github/actions/notify
-#        with:
-#          webhook_url: ${{ secrets.WEBHOOK_URL }}
-#          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
+          echo "Deployment: ${{ job.status }}"
