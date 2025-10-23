@@ -16,13 +16,14 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# Copy dependency files and README (needed by hatchling)
-COPY pyproject.toml uv.lock README.md ./
+# Copy dependency files first for better layer caching
+COPY pyproject.toml uv.lock ./
 
 # Install dependencies (production only, no dev dependencies)
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync
-# Copy the rest of the application
+
+# Copy the rest of the application (including README.md)
 COPY . .
 
 # Create non-root user for security
