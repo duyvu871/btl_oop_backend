@@ -19,6 +19,13 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     steps:
+      - name: Debug backend files
+        run: |
+          echo "Current workspace:"
+          pwd
+          echo "Backend directory contents:"
+          ls -R ./backend || echo "Backend folder not found!"
+
       - name: Debug file tree
         run: |
           echo "📂 Current workspace:"
@@ -34,7 +41,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "backend/docker-compose.prod.yml"
+          source: "./backend/docker-compose.prod.yml"
           target: "${{ secrets.DEPLOY_PATH || '~/src/btl_oop_ptit' }}/"
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.0.3
