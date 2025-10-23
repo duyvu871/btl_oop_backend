@@ -60,19 +60,19 @@ jobs:
       image_latest: ${{ env.IMAGE_NAME }}:latest
       image_sha: ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
 
-  notify:
-    runs-on: ubuntu-latest
-    needs:
-      - build_and_push_backend
-      - test_backend
-    if: always()
-    permissions:
-      actions: read
-      contents: read
-    steps:
-      - uses: actions/checkout@v5
-      - name: Send webhook
-        uses: ./.github/actions/notify
-        with:
-          webhook_url: ${{ secrets.WEBHOOK_URL }}
-          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
+#  notify:
+#    runs-on: ubuntu-latest
+#    needs:
+#      - build_and_push_backend
+#      - test_backend
+#    if: always()
+#    permissions:
+#      actions: read
+#      contents: read
+#    steps:
+#      - uses: actions/checkout@v5
+#      - name: Send webhook
+#        uses: ./.github/actions/notify
+#        with:
+#          webhook_url: ${{ secrets.WEBHOOK_URL }}
+#          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
