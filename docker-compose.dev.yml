@@ -113,17 +113,6 @@ services:
     volumes:
       - redis_data:/data
 
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-    depends_on:
-      - fastapi
-    profiles:
-      - with-nginx
-
   mkdocs:
     build:
       context: ./backend
