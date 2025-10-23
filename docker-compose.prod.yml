@@ -2,6 +2,8 @@ services:
   fastapi:
     image: ${IMAGE_SHA:-adc300/btl_oop:latest}
     restart: always
+    ports:
+      - "8000:8000"
     env_file:
       - .env
     environment:
@@ -30,8 +32,6 @@ services:
       - ARQ_QUEUE_NAME=${ARQ_QUEUE_NAME:-arq:queue}
       - ARQ_MAX_JOBS=${ARQ_MAX_JOBS:-10}
       - ARQ_JOB_TIMEOUT=${ARQ_JOB_TIMEOUT:-300}
-    expose:
-      - "8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -108,7 +108,7 @@ services:
     image: qdrant/qdrant:latest
     restart: always
     expose:
-      - "6333"
+      - "127.0.0.1:6333:6333"
     volumes:
       - qdrant_data:/qdrant/storage
     networks:
@@ -127,8 +127,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
-    expose:
-      - "5432"
+    ports:
+      - "127.0.0.1:5442:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -150,8 +150,8 @@ services:
   redis:
     image: redis:alpine
     restart: always
-    expose:
-      - "6379"
+    ports:
+      - "127.0.0.1:6479:6379"
     volumes:
       - redis_data:/data
     networks:
