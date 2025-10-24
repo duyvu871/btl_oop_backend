@@ -8,6 +8,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - /app/.venv
     env_file:
       - .env.dev
     environment:
@@ -66,6 +67,7 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./backend:/app
+      - /app/.venv
     env_file:
       - .env.dev
     environment:

@@ -188,6 +188,14 @@ seed:
 seed-prod:
 	docker-compose -f docker-compose.prod.yml exec fastapi uv run python -m src.scripts.seed
 
+# Create admin user from environment variables (FIRST_SUPERUSER, FIRST_SUPERUSER_PASSWORD)
+seed-admin:
+	docker-compose -f docker-compose.dev.yml exec fastapi uv run python scripts/seed_admin.py
+
+# Create admin user (production)
+seed-admin-prod:
+	docker-compose -f docker-compose.prod.yml exec fastapi uv run python scripts/seed_admin.py
+
 # Run tests
 test:
 	docker-compose -f docker-compose.dev.yml exec fastapi uv run pytest

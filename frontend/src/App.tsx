@@ -1,36 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Box } from '@mantine/core';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/providers/AuthProvider';
 import { EmailVerificationBanner } from '@/components/EmailVerificationBanner';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { AdminDashboardPage } from '@/pages/AdminDashboardPage';
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <Box
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh'
-        }}
-      >
-        Loading...
-      </Box>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
-}
 
 function App() {
   const { isAuthenticated, user } = useAuth();
@@ -55,6 +33,15 @@ function App() {
               }
             />
 
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <AdminDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </Box>
@@ -64,4 +51,3 @@ function App() {
 }
 
 export default App;
-

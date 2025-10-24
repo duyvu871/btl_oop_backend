@@ -43,6 +43,11 @@ class ResendVerificationResponse(BaseModel):
     success: bool
     message: str
 
+class AuthResponse(BaseModel):
+    access_token: str | None = None
+    refresh_token: str | None = None
+    user: UserRead
+
 # Error messages as simple strings
 class ResponseMessage:
     EMAIL_ALREADY_REGISTERED = "Email already registered"
@@ -53,7 +58,7 @@ class ResponseMessage:
     VERIFICATION_EMAIL_SENT = "Verification email sent successfully"
     RATE_LIMIT_EXCEEDED = "Too many use_cases requests. Please try again later."
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=AuthResponse)
 async def login(login_in: LoginRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == login_in.email))
     user = result.scalar_one_or_none()
@@ -76,10 +81,13 @@ async def login(login_in: LoginRequest, db: AsyncSession = Depends(get_db)):
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "user": UserRead.model_validate(user)
+    }
 
 
-@router.post("/register", response_model=UserRead)
+@router.post("/register", response_model=AuthResponse)
 @timer
 async def register_user(
     user_in: UserCreate,
@@ -122,7 +130,7 @@ async def register_user(
             # Optionally inform user about rate limiting
             pass
 
-    return UserRead.model_validate(new_user)
+    return {"user": UserRead.model_validate(new_user)}
 
 
 @router.post("/token", response_model=Token)
@@ -291,4 +299,3 @@ async def resend_verification_email(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to send use_cases email: {error_msg}"
         )
-

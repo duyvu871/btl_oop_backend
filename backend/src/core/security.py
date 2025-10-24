@@ -64,3 +64,15 @@ async def get_verified_user(current_user: User = Depends(get_current_user)) -> U
     if not current_user.verified:
         raise HTTPException(status_code=403, detail="Email not verified")
     return current_user
+
+# require admin user
+async def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    """Require admin role for access."""
+    from src.core.database.models.user import Role
+    if current_user.role != Role.ADMIN:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin privileges required"
+        )
+    return current_user
+

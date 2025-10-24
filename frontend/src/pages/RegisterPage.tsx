@@ -13,7 +13,7 @@ import {
   Anchor,
 } from '@mantine/core';
 import { IconCheck, IconX } from '@tabler/icons-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/providers/AuthProvider';
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -123,4 +123,3 @@ export function RegisterPage() {
     </Container>
   );
 }
-

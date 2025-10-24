@@ -13,7 +13,7 @@ import {
   Anchor,
 } from '@mantine/core';
 import { IconX } from '@tabler/icons-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/providers/AuthProvider';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -88,4 +88,3 @@ export function LoginPage() {
     </Container>
   );
 }
-

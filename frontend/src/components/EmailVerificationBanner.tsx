@@ -1,6 +1,6 @@
 import { Container, Alert, Button, Stack, Text } from '@mantine/core';
 import { IconAlertCircle } from '@tabler/icons-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/providers/AuthProvider';
 import { useResendVerification } from '@/hooks/useVerification';
 
 export function EmailVerificationBanner() {
