@@ -49,7 +49,9 @@ export function EmailVerificationBanner() {
           )}
           {resendMutation.isError && (
             <Text size="xs" c="white">
-              ✗ {(resendMutation.error as any)?.response?.data?.detail || 'Failed to send verification code'}
+              ✗ {resendMutation.error instanceof Error && 'response' in resendMutation.error
+                ? (resendMutation.error as unknown as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Failed to send verification code'
+                : 'Failed to send verification code'}
             </Text>
           )}
         </Stack>

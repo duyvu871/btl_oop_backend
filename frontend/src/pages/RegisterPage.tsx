@@ -63,7 +63,9 @@ export function RegisterPage() {
 
           {registerError && (
             <Alert icon={<IconX size={16} />} color="red" title="Registration Failed">
-              {(registerError as any)?.response?.data?.detail || 'Failed to create account'}
+              {registerError instanceof Error && 'response' in registerError
+                ? (registerError as unknown as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Failed to create account'
+                : 'Failed to create account'}
             </Alert>
           )}
 

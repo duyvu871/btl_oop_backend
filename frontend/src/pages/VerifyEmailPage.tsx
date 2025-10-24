@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -16,7 +16,7 @@ import { useVerifyEmail, useResendVerification } from '@/hooks/useVerification';
 
 export function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const email = searchParams.get('email') || '';
   const codeFromUrl = searchParams.get('code') || '';
 
@@ -25,14 +25,7 @@ export function VerifyEmailPage() {
   const verifyMutation = useVerifyEmail();
   const resendMutation = useResendVerification();
 
-  // Auto-submit if code is provided in URL (from email click)
-  useEffect(() => {
-    if (codeFromUrl && codeFromUrl.length === 6 && email) {
-      handleVerify().then(_ => {});
-    }
-  }, []); // Only run once on mount
-
-  const handleVerify = async () => {
+  const handleVerify = useCallback(async () => {
     if (code.length !== 6) return;
 
     try {
@@ -43,20 +36,27 @@ export function VerifyEmailPage() {
 
       if (result.success) {
         // Redirect to login or dashboard
-        // setTimeout(() => {
-        //   // navigate('/login');
-        // }, 2000);
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Verification failed:', error);
     }
-  };
+  }, [code, email, navigate, verifyMutation]);
+
+  // Auto-submit if code is provided in URL (from email click)
+  useEffect(() => {
+    if (codeFromUrl && codeFromUrl.length === 6 && email) {
+      handleVerify();
+    }
+  }, [codeFromUrl, email, handleVerify]);
 
   const handleResend = async () => {
     try {
       await resendMutation.mutateAsync({ email });
       setCode(''); // Clear the input
-    } catch (error: any) {
+    } catch (error) {
       console.error('Resend failed:', error);
     }
   };
@@ -87,7 +87,9 @@ export function VerifyEmailPage() {
 
           {verifyMutation.isError && (
             <Alert icon={<IconX size={16} />} color="red" title="Verification Failed">
-              {(verifyMutation.error as any)?.response?.data?.detail || 'Invalid or expired code. Please try again.'}
+              {verifyMutation.error instanceof Error && 'response' in verifyMutation.error
+                ? (verifyMutation.error as unknown as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Invalid or expired code. Please try again.'
+                : 'Invalid or expired code. Please try again.'}
             </Alert>
           )}
 
@@ -99,7 +101,9 @@ export function VerifyEmailPage() {
 
           {resendMutation.isError && (
             <Alert icon={<IconX size={16} />} color="red" title="Failed to Send">
-              {(resendMutation.error as any)?.response?.data?.detail || 'Failed to resend verification code.'}
+              {resendMutation.error instanceof Error && 'response' in resendMutation.error
+                ? (resendMutation.error as unknown as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Failed to resend verification code.'
+                : 'Failed to resend verification code.'}
             </Alert>
           )}
 

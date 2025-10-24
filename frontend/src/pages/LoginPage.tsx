@@ -46,7 +46,9 @@ export function LoginPage() {
 
           {loginError && (
             <Alert icon={<IconX size={16} />} color="red" title="Login Failed">
-              {(loginError as any)?.response?.data?.detail || 'Invalid email or password'}
+              {loginError instanceof Error && 'response' in loginError
+                ? (loginError as unknown as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Invalid email or password'
+                : 'Invalid email or password'}
             </Alert>
           )}
 
