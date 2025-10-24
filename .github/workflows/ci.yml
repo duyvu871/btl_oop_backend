@@ -26,6 +26,7 @@ jobs:
               - 'frontend/**'
               - '.github/workflows/ci.yml'
 
+
   # Backend Tests
   test_backend:
     needs: detect_changes

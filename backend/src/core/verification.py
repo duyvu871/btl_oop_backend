@@ -1,6 +1,6 @@
 """
 Verification Service for generating and verifying one-time codes.
-Supports email verification, password reset, and other verification flows.
+Supports email use_cases, password reset, and other use_cases flows.
 """
 import secrets
 import time
@@ -28,7 +28,7 @@ class VerificationOptions:
 
 @dataclass
 class GenerateResult:
-    """Result from generating a verification code."""
+    """Result from generating a use_cases code."""
     code: str  # returned for you to send email/SMS
     expires_at: int  # epoch milliseconds
 
@@ -42,7 +42,7 @@ class VerificationService:
     - Store hashed codes in Redis (Argon2)
     - Rate limiting to prevent spam
     - Attempt tracking to prevent brute force
-    - One-time use codes (consume after verification)
+    - One-time use codes (consume after use_cases)
 
     Example:
         service = VerificationService(redis_client)
@@ -63,7 +63,7 @@ class VerificationService:
 
     def __init__(self, redis: Redis):
         """
-        Initialize verification service.
+        Initialize use_cases service.
 
         Args:
             redis: Async Redis client instance
@@ -98,7 +98,7 @@ class VerificationService:
 
     async def generate(self, opts: VerificationOptions) -> GenerateResult:
         """
-        Generate a verification code and store it in Redis.
+        Generate a use_cases code and store it in Redis.
 
         Args:
             opts: Verification options
@@ -228,7 +228,7 @@ class VerificationService:
         subject: str
     ) -> int | None:
         """
-        Get remaining verification attempts.
+        Get remaining use_cases attempts.
 
         Args:
             namespace: Verification namespace
@@ -255,7 +255,7 @@ class VerificationService:
 # Dependency for FastAPI
 async def get_verification_service(redis = Depends(get_redis)) -> VerificationService:
     """
-    Get verification service instance (FastAPI dependency).
+    Get use_cases service instance (FastAPI dependency).
 
     Returns:
         VerificationService instance with Redis connection

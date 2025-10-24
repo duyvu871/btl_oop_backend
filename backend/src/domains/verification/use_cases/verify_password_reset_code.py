@@ -32,7 +32,7 @@ class VerifyPasswordResetCodeUseCase:
             code: Reset code to verify
 
         Returns:
-            Dictionary with verification result and remaining attempts
+            Dictionary with use_cases result and remaining attempts
             {
                 "valid": bool,
                 "remaining_attempts": int | None
@@ -47,7 +47,7 @@ class VerifyPasswordResetCodeUseCase:
             code=code
         )
 
-        # Get remaining attempts if verification failed
+        # Get remaining attempts if use_cases failed
         remaining_attempts = None
         if not valid:
             remaining_attempts = await self.verification_service.get_remaining_attempts(

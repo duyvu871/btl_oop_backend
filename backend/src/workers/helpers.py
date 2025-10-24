@@ -26,14 +26,14 @@ async def queue_verification_email(
     custom_message: str | None = None,
 ) -> str | None:
     """
-    Queue a verification email to be sent.
+    Queue a use_cases email to be sent.
 
     Args:
         email: Recipient email address
         verification_token: Verification token
         user_name: User's display name (optional)
         user_email: User's email for display (optional)
-        expiry_hours: Hours until verification link expires (default: 24)
+        expiry_hours: Hours until use_cases link expires (default: 24)
         company_name: Company/App name (optional)
         logo_url: Company logo URL (optional)
         custom_message: Additional custom message (optional)

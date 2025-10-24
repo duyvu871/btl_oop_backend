@@ -12,7 +12,7 @@ class GeneratePasswordResetUseCase:
     Responsibilities:
     - Generate password reset code with stricter security settings
     - Queue email to be sent by worker
-    - Handle rate limiting (stricter than email verification)
+    - Handle rate limiting (stricter than email use_cases)
     """
 
     def __init__(self, verification_service: VerificationService):

@@ -1,12 +1,12 @@
 """
-Use case: Verify email verification code.
+Use case: Verify email use_cases code.
 """
 from src.core.verification import VerificationOptions, VerificationService
 
 
 class VerifyEmailCodeUseCase:
     """
-    Use case for verifying email verification code.
+    Use case for verifying email use_cases code.
 
     Responsibilities:
     - Verify the code against stored hash
@@ -32,7 +32,7 @@ class VerifyEmailCodeUseCase:
             code: Verification code to verify
 
         Returns:
-            Dictionary with verification result and remaining attempts
+            Dictionary with use_cases result and remaining attempts
             {
                 "valid": bool,
                 "remaining_attempts": int | None
@@ -47,7 +47,7 @@ class VerifyEmailCodeUseCase:
             code=code
         )
 
-        # Get remaining attempts if verification failed
+        # Get remaining attempts if use_cases failed
         remaining_attempts = None
         if not valid:
             remaining_attempts = await self.verification_service.get_remaining_attempts(

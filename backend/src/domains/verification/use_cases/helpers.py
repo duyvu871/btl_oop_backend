@@ -1,5 +1,5 @@
 """
-Helper class for verification use cases.
+Helper class for use_cases use cases.
 Provides convenient wrappers around use cases with dependency injection support.
 """
 
@@ -15,7 +15,7 @@ from .verify_password_reset_code import VerifyPasswordResetCodeUseCase
 
 class VerificationUseCase:
     """
-    Helper class that wraps verification use cases.
+    Helper class that wraps use_cases use cases.
     Designed to be used with FastAPI dependency injection.
 
     Example:
@@ -32,7 +32,7 @@ class VerificationUseCase:
 
     def __init__(self, verification_service: VerificationService):
         """
-        Initialize helper with verification service.
+        Initialize helper with use_cases service.
 
         Args:
             verification_service: VerificationService instance
@@ -55,14 +55,14 @@ class VerificationUseCase:
         custom_message: str | None = None,
     ) -> str:
         """
-        Generate and send email verification code.
+        Generate and send email use_cases code.
 
         Args:
             email: User's email address
             ttl_sec: Time to live in seconds (default 10 minutes)
             user_name: User's display name (optional)
             user_email: User's email for display (optional)
-            expiry_hours: Hours until verification link expires (default: 24)
+            expiry_hours: Hours until use_cases link expires (default: 24)
             company_name: Company/App name (optional)
             logo_url: Company logo URL (optional)
             custom_message: Additional custom message (optional)
@@ -86,14 +86,14 @@ class VerificationUseCase:
 
     async def verify_email(self, email: str, code: str) -> dict:
         """
-        Verify email verification code.
+        Verify email use_cases code.
 
         Args:
             email: User's email address
             code: Verification code
 
         Returns:
-            Dictionary with verification result and remaining attempts
+            Dictionary with use_cases result and remaining attempts
             {
                 "valid": bool,
                 "remaining_attempts": int | None
@@ -126,7 +126,7 @@ class VerificationUseCase:
             code: Reset code
 
         Returns:
-            Dictionary with verification result and remaining attempts
+            Dictionary with use_cases result and remaining attempts
             {
                 "valid": bool,
                 "remaining_attempts": int | None

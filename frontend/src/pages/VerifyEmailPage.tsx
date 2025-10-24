@@ -102,8 +102,8 @@ export function VerifyEmailPage() {
           {resendMutation.isError && (
             <Alert icon={<IconX size={16} />} color="red" title="Failed to Send">
               {resendMutation.error instanceof Error && 'response' in resendMutation.error
-                ? (resendMutation.error as unknown as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Failed to resend verification code.'
-                : 'Failed to resend verification code.'}
+                ? (resendMutation.error as unknown as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Failed to resend use_cases code.'
+                : 'Failed to resend use_cases code.'}
             </Alert>
           )}
 

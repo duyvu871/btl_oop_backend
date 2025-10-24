@@ -119,7 +119,7 @@ Queue email từ code (ví dụ trong API endpoint):
 ```python
 from src.workers.helpers import queue_verification_email
 
-# Queue verification email
+# Queue use_cases email
 job_id = await queue_verification_email(
     email="user@example.com",
     verification_token="token_abc123"

@@ -1,5 +1,5 @@
 """
-Use case: Generate and send email verification code.
+Use case: Generate and send email use_cases code.
 """
 
 from src.core.verification import VerificationOptions, VerificationService
@@ -8,10 +8,10 @@ from src.workers.helpers import queue_verification_email
 
 class GenerateEmailVerificationUseCase:
     """
-    Use case for generating and sending email verification code.
+    Use case for generating and sending email use_cases code.
 
     Responsibilities:
-    - Generate verification code with proper configuration
+    - Generate use_cases code with proper configuration
     - Queue email to be sent by worker
     - Handle rate limiting
     """
@@ -44,7 +44,7 @@ class GenerateEmailVerificationUseCase:
             ttl_sec: Time to live in seconds (default 10 minutes)
             user_name: User's display name (optional)
             user_email: User's email for display (optional)
-            expiry_hours: Hours until verification link expires (default: 24)
+            expiry_hours: Hours until use_cases link expires (default: 24)
             company_name: Company/App name (optional)
             logo_url: Company logo URL (optional)
             custom_message: Additional custom message (optional)
@@ -55,7 +55,7 @@ class GenerateEmailVerificationUseCase:
         Raises:
             Exception: If rate limit exceeded or validation fails
         """
-        # Generate verification code
+        # Generate use_cases code
         result = await self.verification_service.generate(
             VerificationOptions(
                 namespace="email-verify",

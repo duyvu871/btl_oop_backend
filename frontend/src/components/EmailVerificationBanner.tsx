@@ -15,7 +15,7 @@ export function EmailVerificationBanner() {
     try {
       await resendMutation.mutateAsync({ email: user.email });
     } catch (error) {
-      console.error('Failed to resend verification:', error);
+      console.error('Failed to resend use_cases:', error);
     }
   };
 
@@ -50,8 +50,8 @@ export function EmailVerificationBanner() {
           {resendMutation.isError && (
             <Text size="xs" c="white">
               ✗ {resendMutation.error instanceof Error && 'response' in resendMutation.error
-                ? (resendMutation.error as unknown as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Failed to send verification code'
-                : 'Failed to send verification code'}
+                ? (resendMutation.error as unknown as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Failed to send use_cases code'
+                : 'Failed to send use_cases code'}
             </Text>
           )}
         </Stack>

@@ -1,8 +1,8 @@
 """
 Verification use cases.
 
-This package contains all use cases related to verification workflows:
-- Email verification
+This package contains all use cases related to use_cases workflows:
+- Email use_cases
 - Password reset
 - 2FA (future)
 """

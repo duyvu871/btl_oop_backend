@@ -10,7 +10,7 @@ from src.core.database.database import get_db
 from src.core.database.models.user import User
 from src.core.decorator.timer import timer
 from src.core.security import create_access_token, get_password_hash, get_verified_user, verify_password
-from src.domains.use_cases.verification import VerificationUseCase, get_verification_usecase
+from src.domains.verification.use_cases import VerificationUseCase, get_verification_usecase
 from src.schemas.user import UserCreate, UserRead
 from src.settings.env import settings
 
@@ -51,7 +51,7 @@ class ResponseMessage:
     INVALID_PASSWORD_FORMAT = "Invalid password storage format"
     INCORRECT_EMAIL_OR_PASSWORD = "Incorrect email or password"
     VERIFICATION_EMAIL_SENT = "Verification email sent successfully"
-    RATE_LIMIT_EXCEEDED = "Too many verification requests. Please try again later."
+    RATE_LIMIT_EXCEEDED = "Too many use_cases requests. Please try again later."
 
 @router.post("/login", response_model=Token)
 async def login(login_in: LoginRequest, db: AsyncSession = Depends(get_db)):
@@ -104,7 +104,7 @@ async def register_user(
     await db.commit()
     await db.refresh(new_user)
 
-    # Send verification email with user information
+    # Send use_cases email with user information
     try:
         job_id = await verification_use_case.send_email_verification(
             email=new_user.email,
@@ -117,7 +117,7 @@ async def register_user(
         print(f"Verification email queued with job ID: {job_id}")
     except Exception as e:
         # Log error but don't fail registration
-        print(f"Failed to send verification email: {e}")
+        print(f"Failed to send use_cases email: {e}")
         if "Too many requests" in str(e):
             # Optionally inform user about rate limiting
             pass
@@ -166,10 +166,10 @@ async def verify_email(
     verification_use_case: VerificationUseCase = Depends(get_verification_usecase)
 ):
     """
-    Verify user's email with verification code.
+    Verify user's email with use_cases code.
 
     Args:
-        request: Contains email and verification code
+        request: Contains email and use_cases code
         db: Database session
         verification_use_case: Verification use case for code validation
 
@@ -208,12 +208,12 @@ async def verify_email(
         if remaining is not None and remaining > 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid verification code. {remaining} attempts remaining."
+                detail=f"Invalid use_cases code. {remaining} attempts remaining."
             )
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid or expired verification code. Please request a new one."
+                detail="Invalid or expired use_cases code. Please request a new one."
             )
 
     # Update user's verified status
@@ -234,7 +234,7 @@ async def resend_verification_email(
     verification_use_case: VerificationUseCase = Depends(get_verification_usecase)
 ):
     """
-    Resend verification email to user.
+    Resend use_cases email to user.
 
     Args:
         request: Contains user email
@@ -264,7 +264,7 @@ async def resend_verification_email(
             detail="Email is already verified"
         )
 
-    # Send verification email
+    # Send use_cases email
     try:
         job_id = await verification_use_case.send_email_verification(
             email=user.email,
@@ -289,6 +289,6 @@ async def resend_verification_email(
             )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to send verification email: {error_msg}"
+            detail=f"Failed to send use_cases email: {error_msg}"
         )
 
