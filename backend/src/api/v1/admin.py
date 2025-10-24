@@ -1,4 +1,3 @@
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -8,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.database.database import get_db
 from src.core.database.models.user import Role, User
 from src.core.security import get_admin_user
-from src.schemas.user import UserAdminRead, UserListResponse, UserUpdate, UserAdminCreate
+from src.schemas.user import UserAdminCreate, UserAdminRead, UserListResponse, UserUpdate
 
 router = APIRouter(
     prefix="/admin",
@@ -21,9 +20,9 @@ router = APIRouter(
 async def list_users(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Items per page"),
-    search: Optional[str] = Query(None, description="Search by email or username"),
-    role: Optional[str] = Query(None, description="Filter by role"),
-    verified: Optional[bool] = Query(None, description="Filter by verification status"),
+    search: str | None = Query(None, description="Search by email or username"),
+    role: str | None = Query(None, description="Filter by role"),
+    verified: bool | None = Query(None, description="Filter by verification status"),
     db: AsyncSession = Depends(get_db),
     current_admin: User = Depends(get_admin_user),
 ):
@@ -178,7 +177,7 @@ async def get_user_stats(
 
     # Verified users
     verified_users_result = await db.execute(
-        select(func.count(User.id)).where(User.verified == True)
+        select(func.count(User.id)).where(User.verified)
     )
     verified_users = verified_users_result.scalar_one()
 
