@@ -1,35 +1,40 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Container, Title, Text, Button, Stack } from '@mantine/core';
+import { useAuth } from './hooks/useAuth';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <Container size="sm" mt="xl">
+        <Text>Loading...</Text>
+      </Container>
+    );
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Container size="sm" mt="xl">
+      <Stack gap="md">
+        <Title order={1}>Welcome to Mantine v8 + React Query + Jotai</Title>
+
+        {isAuthenticated ? (
+          <>
+            <Text size="lg">Hello, {user?.email}!</Text>
+            <Text c="dimmed">You are authenticated</Text>
+          </>
+        ) : (
+          <>
+            <Text size="lg">You are not authenticated</Text>
+            <Button variant="filled">Login</Button>
+          </>
+        )}
+
+        <Text c="dimmed" size="sm">
+          Edit <code>src/App.tsx</code> to get started
+        </Text>
+      </Stack>
+    </Container>
+  );
 }
 
-export default App
+export default App;

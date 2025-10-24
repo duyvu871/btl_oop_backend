@@ -11,16 +11,32 @@ help:
 	@echo "  make rebuild       - Rebuild and restart all containers"
 	@echo "  make logs          - Show logs from all services"
 	@echo "  make logs-api      - Show logs from FastAPI service"
+	@echo "  make logs-fe       - Show logs from Frontend service"
+	@echo "  make logs-fe       - Show logs from Frontend service"
+	@echo "  make shell-fe      - Open shell in Frontend container"
+	@echo "  make logs-fe       - Show logs from Frontend service"
+	@echo "  make shell-fe      - Open shell in Frontend container"
+	@echo "  make logs-fe       - Show logs from Frontend service"
+	@echo "  make shell-fe      - Open shell in Frontend container"
 	@echo "  make shell         - Open shell in FastAPI container"
+	@echo "  make shell-fe      - Open shell in Frontend container"
 	@echo "  make db-shell      - Open PostgreSQL shell"
+	@echo "  make test-fe       - Run frontend tests"
 	@echo "  make redis-shell   - Open Redis CLI"
 	@echo "  make clean         - Remove all containers and volumes"
+	@echo "  make lint-fe       - Run frontend linting"
+	@echo "  make test-fe       - Run frontend tests"
 	@echo "  make migrate       - Run database migrations"
 	@echo "  make migrate-create - Create new migration"
+	@echo "  make lint-fe       - Run frontend linting"
+	@echo "  make test-fe       - Run frontend tests"
 	@echo "  make seed          - Seed database with initial data"
 	@echo "  make test          - Run tests"
+	@echo "  make lint-fe       - Run frontend linting"
+	@echo "  make test-fe       - Run frontend tests"
 	@echo "  make docs          - Start MkDocs server"
 	@echo "  make lint          - Run linting"
+	@echo "  make lint-fe       - Run frontend linting"
 	@echo "  make format        - Format code"
 
 # Development environment
@@ -70,6 +86,10 @@ logs:
 logs-api:
 	docker-compose -f docker-compose.dev.yml logs -f fastapi
 
+# Show logs from Frontend service
+logs-fe:
+	docker-compose -f docker-compose.dev.yml logs -f frontend
+
 # Show logs from worker service
 logs-worker:
 	docker-compose -f docker-compose.dev.yml logs -f worker_send_mail
@@ -81,14 +101,26 @@ logs-db:
 # Show logs from Redis
 logs-redis:
 	docker-compose -f docker-compose.dev.yml logs -f redis
+# Open shell in Frontend container
+shell-fe:
+	docker-compose -f docker-compose.dev.yml exec frontend /bin/sh
+
 
 # Show logs from Qdrant
 logs-qdrant:
 	docker-compose -f docker-compose.dev.yml logs -f qdrant
+# Open shell in Frontend container
+shell-fe:
+	docker-compose -f docker-compose.dev.yml exec frontend /bin/sh
+
 
 # Show production logs
 logs-prod:
 	docker-compose -f docker-compose.prod.yml logs -f
+# Open shell in Frontend container
+shell-fe:
+	docker-compose -f docker-compose.dev.yml exec frontend /bin/sh
+
 
 logs-api-prod:
 	docker-compose -f docker-compose.prod.yml logs -f fastapi
@@ -160,6 +192,10 @@ seed-prod:
 test:
 	docker-compose -f docker-compose.dev.yml exec fastapi uv run pytest
 
+# Run frontend tests
+test-fe:
+	cd frontend && npm test
+
 # Run tests with coverage
 test-cov:
 	docker-compose -f docker-compose.dev.yml exec fastapi uv run pytest --cov=src --cov-report=html
@@ -167,6 +203,13 @@ test-cov:
 # Start MkDocs documentation server
 docs:
 	docker-compose -f docker-compose.dev.yml --profile with-docs up -d mkdocs
+
+restart-fe:
+	docker-compose -f docker-compose.dev.yml restart frontend
+
+# Run frontend linting
+lint-fe:
+	cd frontend && npm run lint
 
 # Start with nginx
 nginx:
