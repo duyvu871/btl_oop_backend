@@ -67,7 +67,7 @@ async def seed_admin():
         await db.commit()
         await db.refresh(admin_user)
 
-        print(f"✅ Admin user created successfully!")
+        print("✅ Admin user created successfully!")
         print(f"   Email: {admin_user.email}")
         print(f"   Username: {admin_user.user_name}")
         print(f"   Role: {admin_user.role.value}")
@@ -78,4 +78,3 @@ async def seed_admin():
 
 if __name__ == "__main__":
     asyncio.run(seed_admin())
-
