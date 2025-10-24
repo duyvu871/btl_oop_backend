@@ -229,7 +229,7 @@ jobs:
             fi
 
             echo "🏥 Health check - Frontend"
-            if curl -f http://localhost:3000/health > /dev/null 2>&1; then
+            if curl -f http://localhost:5000/health > /dev/null 2>&1; then
               echo "✅ Frontend is healthy"
             else
               echo "⚠️  Frontend health check failed (may need more time)"

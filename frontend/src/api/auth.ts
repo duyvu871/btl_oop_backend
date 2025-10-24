@@ -18,6 +18,26 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface VerifyEmailData {
+  email: string;
+  code: string;
+}
+
+export interface VerifyEmailResponse {
+  success: boolean;
+  message: string;
+  remaining_attempts?: number | null;
+}
+
+export interface ResendVerificationData {
+  email: string;
+}
+
+export interface ResendVerificationResponse {
+  success: boolean;
+  message: string;
+}
+
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     const response = await axiosInstance.post('/api/v1/auth/login', credentials);
@@ -42,6 +62,16 @@ export const authApi = {
     const response = await axiosInstance.post('/api/v1/auth/refresh', {
       refresh_token: refreshToken,
     });
+    return response.data;
+  },
+
+  verifyEmail: async (data: VerifyEmailData): Promise<VerifyEmailResponse> => {
+    const response = await axiosInstance.post('/api/v1/auth/verify-email', data);
+    return response.data;
+  },
+
+  resendVerification: async (data: ResendVerificationData): Promise<ResendVerificationResponse> => {
+    const response = await axiosInstance.post('/api/v1/auth/resend-verification', data);
     return response.data;
   },
 };

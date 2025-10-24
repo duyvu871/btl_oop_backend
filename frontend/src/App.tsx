@@ -1,40 +1,67 @@
-import { Container, Title, Text, Button, Stack } from '@mantine/core';
-import { useAuth } from './hooks/useAuth';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Box } from '@mantine/core';
+import { useAuth } from '@/hooks/useAuth';
+import { EmailVerificationBanner } from '@/components/EmailVerificationBanner';
+import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
+import { LoginPage } from '@/pages/LoginPage';
+import { RegisterPage } from '@/pages/RegisterPage';
+import { DashboardPage } from '@/pages/DashboardPage';
 
-function App() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <Container size="sm" mt="xl">
-        <Text>Loading...</Text>
-      </Container>
+      <Box
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh'
+        }}
+      >
+        Loading...
+      </Box>
     );
   }
 
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function App() {
+  const { isAuthenticated, user } = useAuth();
+
   return (
-    <Container size="sm" mt="xl">
-      <Stack gap="md">
-        <Title order={1}>Welcome to Mantine v8 + React Query + Jotai</Title>
+    <BrowserRouter>
+      <Box style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        {isAuthenticated && user && !user.verified && <EmailVerificationBanner />}
 
-        {isAuthenticated ? (
-          <>
-            <Text size="lg">Hello, {user?.email}!</Text>
-            <Text c="dimmed">You are authenticated</Text>
-          </>
-        ) : (
-          <>
-            <Text size="lg">You are not authenticated</Text>
-            <Button variant="filled">Login</Button>
-          </>
-        )}
+        <Box style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
 
-        <Text c="dimmed" size="sm">
-          Edit <code>src/App.tsx</code> to get started
-        </Text>
-      </Stack>
-    </Container>
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Box>
+      </Box>
+    </BrowserRouter>
   );
 }
 
 export default App;
+

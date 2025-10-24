@@ -10,6 +10,32 @@ services:
       - ./backend:/app
     env_file:
       - .env.dev
+    environment:
+      - DEBUG=False
+      - FRONTEND_URL=${FRONTEND_URL}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_DB=${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - QDRANT_URL=http://qdrant:6333
+      - SECRET_KEY=${SECRET_KEY}
+      - ALGORITHM=${ALGORITHM}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
+      - SMTP_TLS=${SMTP_TLS}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
+      - EMAILS_FROM_NAME=${EMAILS_FROM_NAME}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - ARQ_QUEUE_NAME=${ARQ_QUEUE_NAME:-arq:queue}
+      - ARQ_MAX_JOBS=${ARQ_MAX_JOBS:-10}
+      - ARQ_JOB_TIMEOUT=${ARQ_JOB_TIMEOUT:-300}
     depends_on:
       - postgres
       - redis
@@ -23,15 +49,16 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.dev
     ports:
-      - "3000:3000"
+      - "5173:5173"
     volumes:
       - ./frontend:/app
-      - /app/node_modules
+      - /app/node_modules  # Prevent node_modules from being overwritten by host
     environment:
       - VITE_API_BASE_URL=http://localhost:8000
     networks:
       - backend
-    command: npm run dev -- --host 0.0.0.0
+    stdin_open: true
+    tty: true
 
   worker_send_mail:
     build:
@@ -41,6 +68,32 @@ services:
       - ./backend:/app
     env_file:
       - .env.dev
+    environment:
+      - DEBUG=False
+      - FRONTEND_URL=${FRONTEND_URL}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_DB=${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - QDRANT_URL=http://qdrant:6333
+      - SECRET_KEY=${SECRET_KEY}
+      - ALGORITHM=${ALGORITHM}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
+      - SMTP_TLS=${SMTP_TLS}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
+      - EMAILS_FROM_NAME=${EMAILS_FROM_NAME}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - ARQ_QUEUE_NAME=${ARQ_QUEUE_NAME:-arq:queue}
+      - ARQ_MAX_JOBS=${ARQ_MAX_JOBS:-10}
+      - ARQ_JOB_TIMEOUT=${ARQ_JOB_TIMEOUT:-300}
     depends_on:
       - redis
       - postgres
@@ -55,7 +108,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     networks:
@@ -69,7 +122,7 @@ services:
   redis:
     image: redis:alpine
     ports:
-      - "6379:6379"
+      - "6479:6379"
     volumes:
       - redis_dev_data:/data
     networks:

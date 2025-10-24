@@ -27,6 +27,22 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
+class VerifyEmailRequest(BaseModel):
+    email: EmailStr
+    code: str
+
+class VerifyEmailResponse(BaseModel):
+    success: bool
+    message: str
+    remaining_attempts: int | None = None
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
+
+class ResendVerificationResponse(BaseModel):
+    success: bool
+    message: str
+
 # Error messages as simple strings
 class ResponseMessage:
     EMAIL_ALREADY_REGISTERED = "Email already registered"
@@ -46,6 +62,13 @@ async def login(login_in: LoginRequest, db: AsyncSession = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ResponseMessage.INCORRECT_EMAIL_OR_PASSWORD,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.verified:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email not verified. Please verify your email before logging in.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -133,3 +156,139 @@ async def login_for_access_token(
 @router.get("/me", response_model=UserRead)
 async def read_users_me(current_user: User = Depends(get_verified_user)):
     return UserRead.model_validate(current_user)
+
+
+
+@router.post("/verify-email", response_model=VerifyEmailResponse)
+async def verify_email(
+    request: VerifyEmailRequest,
+    db: AsyncSession = Depends(get_db),
+    verification_use_case: VerificationUseCase = Depends(get_verification_usecase)
+):
+    """
+    Verify user's email with verification code.
+
+    Args:
+        request: Contains email and verification code
+        db: Database session
+        verification_use_case: Verification use case for code validation
+
+    Returns:
+        VerifyEmailResponse with success status and message
+
+    Raises:
+        HTTPException: If user not found or code is invalid
+    """
+    # Check if user exists
+    result = await db.execute(select(User).where(User.email == request.email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    # Check if already verified
+    if user.verified:
+        return VerifyEmailResponse(
+            success=True,
+            message="Email is already verified"
+        )
+
+    # Verify the code
+    verification_result = await verification_use_case.verify_email(
+        email=str(request.email),
+        code=request.code
+    )
+
+    if not verification_result["valid"]:
+        remaining = verification_result.get("remaining_attempts")
+
+        if remaining is not None and remaining > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid verification code. {remaining} attempts remaining."
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired verification code. Please request a new one."
+            )
+
+    # Update user's verified status
+    user.verified = True
+    await db.commit()
+    await db.refresh(user)
+
+    return VerifyEmailResponse(
+        success=True,
+        message="Email verified successfully"
+    )
+
+
+@router.post("/resend-verification", response_model=ResendVerificationResponse)
+async def resend_verification_email(
+    request: ResendVerificationRequest,
+    db: AsyncSession = Depends(get_db),
+    verification_use_case: VerificationUseCase = Depends(get_verification_usecase)
+):
+    """
+    Resend verification email to user.
+
+    Args:
+        request: Contains user email
+        db: Database session
+        verification_use_case: Verification use case
+
+    Returns:
+        ResendVerificationResponse with success status
+
+    Raises:
+        HTTPException: If user not found, already verified, or rate limited
+    """
+    # Check if user exists
+    result = await db.execute(select(User).where(User.email == request.email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    # Check if already verified
+    if user.verified:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email is already verified"
+        )
+
+    # Send verification email
+    try:
+        job_id = await verification_use_case.send_email_verification(
+            email=user.email,
+            user_name=user.user_name,
+            user_email=user.email,
+            expiry_hours=24,
+            company_name=settings.EMAILS_FROM_NAME or "BTL_OOP_PTIT",
+            custom_message="Please verify your email to unlock all features.",
+        )
+        print(f"Verification email queued with job ID: {job_id}")
+
+        return ResendVerificationResponse(
+            success=True,
+            message="Verification email sent successfully"
+        )
+    except Exception as e:
+        error_msg = str(e)
+        if "Too many requests" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=ResponseMessage.RATE_LIMIT_EXCEEDED
+            )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to send verification email: {error_msg}"
+        )
+

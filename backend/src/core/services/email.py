@@ -145,7 +145,7 @@ def send_verification_email(
 
     Args:
         to: User's email address
-        verification_token: Token for email verification
+        verification_token: Verification code (6 digits) for email verification
         user_name: User's display name (optional)
         user_email: User's email for display (optional)
         expiry_hours: Hours until verification link expires (default: 24)
@@ -158,7 +158,8 @@ def send_verification_email(
     """
     subject = f"Verify your email - {company_name}" if company_name else "Verify your email"
     context = {
-        "verification_url": f"{settings.FRONTEND_URL}/verify?token={verification_token}",
+        "verification_code": verification_token,  # The 6-digit code
+        "verification_url": f"{settings.FRONTEND_URL}/verify-email?email={to}&code={verification_token}",
         "frontend_url": settings.FRONTEND_URL,
         "support_email": settings.EMAILS_FROM_EMAIL,
         "user_name": user_name or "there",
