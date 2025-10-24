@@ -214,7 +214,10 @@ jobs:
 
             echo "🚀 Starting all services"
             docker compose -f docker-compose.prod.yml up -d
-
+            
+            echo "👑 Seeding initial superuser"
+            docker-compose -f docker-compose.dev.yml exec fastapi uv run python scripts/seed_admin.py
+            
             echo "⏳ Waiting for services to start..."
             sleep 15
 
