@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 class EmailType(str, Enum):
     """Types of emails that can be sent."""
-    VERIFICATION = "use_cases"
+    VERIFICATION = "verification"
     PASSWORD_RESET = "password_reset"
     CUSTOM = "custom"
 
