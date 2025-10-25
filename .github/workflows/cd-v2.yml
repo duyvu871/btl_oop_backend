@@ -32,7 +32,7 @@ jobs:
           echo "FRONTEND_IMAGE_SHA=${{ env.FRONTEND_IMAGE }}:sha-${SHORT_SHA}" >> $GITHUB_ENV
           
           echo "BACKEND_IMAGE_LATEST: ${{ env.BACKEND_IMAGE }}:latest"
-          echo "FRONTEND_IMAGE_LATEST: ${{ env.FRONTEND_IMAGE }}:latest
+          echo "FRONTEND_IMAGE_LATEST: ${{ env.FRONTEND_IMAGE }}:latest"
           echo "Backend: ${{ env.BACKEND_IMAGE }}:sha-${SHORT_SHA}"
           echo "Frontend: ${{ env.FRONTEND_IMAGE }}:sha-${SHORT_SHA}"
 
