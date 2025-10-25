@@ -48,6 +48,8 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         env:
           # Image vars
+          BACKEND_IMAGE_LATEST: ${{ env.BACKEND_IMAGE_LATEST }}
+          FRONTEND_IMAGE_LATEST: ${{ env.FRONTEND_IMAGE_LATEST }}
           BACKEND_IMAGE_SHA: ${{ env.BACKEND_IMAGE_SHA }}
           FRONTEND_IMAGE_SHA: ${{ env.FRONTEND_IMAGE_SHA }}
 
