@@ -168,8 +168,6 @@ jobs:
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
             echo "📥 Pulling images..."
-            $BACKEND_IMAGE_LATEST="${{ env.BACKEND_IMAGE_LATEST}}"
-            $FRONTEND_IMAGE_LATEST="${{ env.FRONTEND_IMAGE_LATEST}}"
             echo "Backend: $BACKEND_IMAGE_LATEST"
             echo "Frontend: $FRONTEND_IMAGE_LATEST"
             
