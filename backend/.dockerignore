@@ -68,7 +68,6 @@ Thumbs.db
 # Development only files
 QUICKSTART.*.md
 playground/
-scripts/
 
 # Node modules (if any)
 node_modules/
