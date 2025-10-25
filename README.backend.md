@@ -499,14 +499,4 @@ arq src.workers.send_mail.WorkerSettings
 - Gặp lỗi "uv: not found" thì fix Dockerfile hoặc thay lệnh `uv` bằng lệnh pip/alembic trực tiếp
 - Chạy ARQ worker riêng để xử lý email queue: `arq src.workers.send_mail.WorkerSettings`
 
----
-
-## Cần giúp thêm?
-
-Nếu bạn cần mình hỗ trợ:
-- Cập nhật Dockerfile để cài `uv` tự động
-- Thay tất cả lệnh `uv` bằng `pip`/`alembic` trực tiếp trong Makefile và Dockerfile
-- Tạo file mẫu `.env.dev.example` và `.env.prod.example`
-- Setup supervisor/systemd để chạy ARQ worker như service
-
-Cứ hỏi nhé! 😊
+[docs](backend/docs)
