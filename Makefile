@@ -1,4 +1,4 @@
-.PHONY: help dev prod up down build rebuild logs shell db-shell redis-shell clean migrate seed test docs
+.PHONY: help dev prod up down build rebuild logs shell db-shell redis-shell clean migrate seed load-recipes load-recipes-prod test docs
 
 # Default target
 help:
@@ -31,6 +31,8 @@ help:
 	@echo "  make lint-fe       - Run frontend linting"
 	@echo "  make test-fe       - Run frontend tests"
 	@echo "  make seed          - Seed database with initial data"
+	@echo "  make load-recipes   - Load recipes from JSON file"
+	@echo "  make load-recipes-prod - Load recipes from JSON file (production)"
 	@echo "  make test          - Run tests"
 	@echo "  make lint-fe       - Run frontend linting"
 	@echo "  make test-fe       - Run frontend tests"
@@ -101,26 +103,14 @@ logs-db:
 # Show logs from Redis
 logs-redis:
 	docker-compose -f docker-compose.dev.yml logs -f redis
-# Open shell in Frontend container
-shell-fe:
-	docker-compose -f docker-compose.dev.yml exec frontend /bin/sh
-
 
 # Show logs from Qdrant
 logs-qdrant:
 	docker-compose -f docker-compose.dev.yml logs -f qdrant
-# Open shell in Frontend container
-shell-fe:
-	docker-compose -f docker-compose.dev.yml exec frontend /bin/sh
-
 
 # Show production logs
 logs-prod:
 	docker-compose -f docker-compose.prod.yml logs -f
-# Open shell in Frontend container
-shell-fe:
-	docker-compose -f docker-compose.dev.yml exec frontend /bin/sh
-
 
 logs-api-prod:
 	docker-compose -f docker-compose.prod.yml logs -f fastapi
@@ -133,21 +123,10 @@ shell:
 shell-prod:
 	docker-compose -f docker-compose.prod.yml exec fastapi /bin/sh
 
-# Open PostgreSQL shell
-db-shell:
-	docker-compose -f docker-compose.dev.yml exec postgres psql -U postgres -d fastapi_db
+# Open shell in Frontend container
+shell-fe:
+	docker-compose -f docker-compose.dev.yml exec frontend /bin/sh
 
-# Open PostgreSQL shell in production
-db-shell-prod:
-	docker-compose -f docker-compose.prod.yml exec postgres psql -U ${POSTGRES_USER} -d ${POSTGRES_DB}
-
-# Open Redis CLI
-redis-shell:
-	docker-compose -f docker-compose.dev.yml exec redis redis-cli
-
-# Open Redis CLI in production
-redis-shell-prod:
-	docker-compose -f docker-compose.prod.yml exec redis redis-cli
 
 # Clean up containers and volumes
 clean:
@@ -195,6 +174,14 @@ seed-admin:
 # Create admin user (production)
 seed-admin-prod:
 	docker-compose -f docker-compose.prod.yml exec fastapi uv run python scripts/seed_admin.py
+
+# Load recipes from JSON file
+load-recipes:
+	docker-compose -f docker-compose.dev.yml exec fastapi uv run python scripts/load_recipe_to_db.py
+
+# Load recipes in production from JSON file
+load-recipes-prod:
+	docker-compose -f docker-compose.prod.yml exec fastapi uv run python scripts/load_recipe_to_db.py
 
 # Run tests
 test:

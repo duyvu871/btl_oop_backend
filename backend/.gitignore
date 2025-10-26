@@ -8,5 +8,6 @@ htmlcov
 .venv
 
 playground/
+resources/
 .vscode/
 .DS_Store
