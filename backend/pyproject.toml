@@ -11,6 +11,7 @@ dependencies = [
     "uvicorn",
     "gunicorn",
     "langchain",
+    "langchain-community",
     "langchain-openai",
     "langchain-google-genai",
     "langchain-text-splitters",

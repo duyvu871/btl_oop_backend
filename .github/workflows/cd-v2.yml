@@ -58,6 +58,9 @@ jobs:
           # App vars
           DEBUG: ${{ secrets.DEBUG || 'False' }}
           FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+          API_PREFIX: ${{ secrets.API_PREFIX || '/api/v1' }}
+          CORS_ORIGINS: ${{ secrets.CORS_ORIGINS || '["*"]' }}
 
           # Database
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
@@ -71,8 +74,16 @@ jobs:
           REDIS_PORT: ${{ secrets.REDIS_PORT || '6379' }}
           REDIS_DB: ${{ secrets.REDIS_DB || '0' }}
 
+          # OpenAI
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          EMBEDDING_MODEL: ${{ secrets.EMBEDDING_MODEL || 'text-embedding-3-small' }}
+          COMPLETION_MODEL: ${{ secrets.COMPLETION_MODEL || 'gpt-3.5-turbo' }}
+          RERANKER_MODEL: ${{ secrets.RERANKER_MODEL || 'cross-encoder/ms-marco-MiniLM-L-6-v2' }}
+
           # Qdrant
           QDRANT_URL: ${{ secrets.QDRANT_URL || 'http://qdrant:6333' }}
+          QDRANT_RECIPE_COLLECTION: ${{ secrets.QDRANT_RECIPE_COLLECTION || 'recipes' }}
+          QDRANT_PERSONAL_COLLECTION: ${{ secrets.QDRANT_PERSONAL_COLLECTION || 'personal_recommendation' }}
 
           # Security / JWT
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
@@ -108,7 +119,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
-          envs: BACKEND_IMAGE_LATEST,BACKEND_IMAGE_SHA,FRONTEND_IMAGE_LATEST,FRONTEND_IMAGE_SHA,DEBUG,FRONTEND_URL,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_SERVER,POSTGRES_DB,REDIS_URL,REDIS_HOST,REDIS_PORT,REDIS_DB,QDRANT_URL,SECRET_KEY,ALGORITHM,ACCESS_TOKEN_EXPIRE_MINUTES,SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASSWORD,SMTP_FROM,SMTP_TLS,EMAILS_FROM_EMAIL,EMAILS_FROM_NAME,SENTRY_DSN,ARQ_QUEUE_NAME,ARQ_MAX_JOBS,ARQ_JOB_TIMEOUT,FIRST_SUPERUSER,FIRST_SUPERUSER_PASSWORD,VITE_API_BASE_URL
+          envs: BACKEND_IMAGE_LATEST,BACKEND_IMAGE_SHA,FRONTEND_IMAGE_LATEST,FRONTEND_IMAGE_SHA,DEBUG,FRONTEND_URL,BACKEND_URL,API_PREFIX,CORS_ORIGINS,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_SERVER,POSTGRES_DB,REDIS_URL,REDIS_HOST,REDIS_PORT,REDIS_DB,OPENAI_API_KEY,EMBEDDING_MODEL,COMPLETION_MODEL,RERANKER_MODEL,QDRANT_URL,QDRANT_RECIPE_COLLECTION,QDRANT_PERSONAL_COLLECTION,SECRET_KEY,ALGORITHM,ACCESS_TOKEN_EXPIRE_MINUTES,SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASSWORD,SMTP_FROM,SMTP_TLS,EMAILS_FROM_EMAIL,EMAILS_FROM_NAME,SENTRY_DSN,ARQ_QUEUE_NAME,ARQ_MAX_JOBS,ARQ_JOB_TIMEOUT,FIRST_SUPERUSER,FIRST_SUPERUSER_PASSWORD,VITE_API_BASE_URL
           script: |
             set -euo pipefail
 
@@ -122,6 +133,9 @@ jobs:
             cat > .env <<EOF
             DEBUG=${DEBUG}
             FRONTEND_URL=${FRONTEND_URL}
+            BACKEND_URL=${BACKEND_URL}
+            API_PREFIX=${API_PREFIX}
+            CORS_ORIGINS=${CORS_ORIGINS}
             
             POSTGRES_USER=${POSTGRES_USER}
             POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -133,7 +147,14 @@ jobs:
             REDIS_PORT=${REDIS_PORT}
             REDIS_DB=${REDIS_DB}
             
+            OPENAI_API_KEY=${OPENAI_API_KEY}
+            EMBEDDING_MODEL=${EMBEDDING_MODEL}
+            COMPLETION_MODEL=${COMPLETION_MODEL}
+            RERANKER_MODEL=${RERANKER_MODEL}
+            
             QDRANT_URL=${QDRANT_URL}
+            QDRANT_RECIPE_COLLECTION=${QDRANT_RECIPE_COLLECTION}
+            QDRANT_PERSONAL_COLLECTION=${QDRANT_PERSONAL_COLLECTION}
             
             SECRET_KEY=${SECRET_KEY}
             ALGORITHM=${ALGORITHM}
@@ -246,4 +267,3 @@ jobs:
 
             echo "🎉 Deployment completed successfully!"
             docker compose -f docker-compose.prod.yml ps
-

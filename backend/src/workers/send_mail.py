@@ -49,7 +49,7 @@ async def send_email_task(ctx: dict[str, Any], email_data: dict[str, Any]) -> bo
 
             logger.info(f"Sending verification email to {task.to}")
             result = send_verification_email(
-                to=task.to,
+                to=str(task.to),
                 verification_token=task.verification_token,
                 user_name=task.user_name,
                 user_email=task.user_email,
