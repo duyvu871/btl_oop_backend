@@ -10,6 +10,11 @@ RUN apt-get update && apt-get install -y \
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
+# Set environment variables to avoid CUDA downloads
+ENV CUDA_VISIBLE_DEVICES=""
+ENV TORCH_USE_CUDA_DSA=0
+ENV PYTORCH_NO_CUDA=1
+
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
