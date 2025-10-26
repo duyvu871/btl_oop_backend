@@ -4,23 +4,19 @@ import uuid
 from pathlib import Path
 
 from langchain_core.documents import Document
-
-# from langchain_google_genai import GoogleGenerativeAIEmbeddings
-# from sentence_transformers import SentenceTransformer
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_qdrant import QdrantVectorStore
 from langchain_text_splitters.markdown import MarkdownHeaderTextSplitter
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import Distance, VectorParams
-
-# from pydantic import SecretStr
 from tqdm.asyncio import tqdm
+
+from src.core.utils.number import extract_number
 
 # Add the project root to the path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import func, select
 
+from src.ai.embeddings.generate_embedding import EmbeddingGenerator
+from src.ai.embeddings.qdrant_store import QdrantStore
 from src.core.database.database import AsyncSessionLocal
 from src.core.database.models import Recipe
 from src.settings.env import settings
@@ -47,48 +43,22 @@ async def main():
             all_recipes.extend(recipes)
             offset += batch_size
 
-        # Initialize splitter, embedding model, and Qdrant client once
+        # Initialize services using the new classes
+        embedding_generator = EmbeddingGenerator(model_name="bkai-foundation-models/vietnamese-bi-encoder")
+        qdrant_client = QdrantClient(url=settings.QDRANT_URL)
+        qdrant_store = QdrantStore(
+            client=qdrant_client,
+            collection_name=settings.QDRANT_RECIPE_COLLECTION,
+            embedding_model=embedding_generator.embedding_model,
+            vector_size=768,
+        )
+        qdrant_store.ensure_collection_exists(recreate=True)  # Recreate collection
+
+        # Initialize splitter
         splitter = MarkdownHeaderTextSplitter(headers_to_split_on=[
             ("#", "recipe_name"),
             ("##", "type"),
         ])
-        # Initialize embedding model
-        embedding_model = HuggingFaceEmbeddings(
-            model_name="keepitreal/vietnamese-sbert",
-            model_kwargs={"device": "cpu"},
-            encode_kwargs={'normalize_embeddings': False}
-        )
-        # Initialize Qdrant client
-        qdrant_client = QdrantClient(url=settings.QDRANT_URL)
-
-        # Ensure collection exists
-        collection_exist = qdrant_client.collection_exists(settings.QDRANT_RECIPE_COLLECTION)
-        if not collection_exist:
-            vector_size = 768
-            qdrant_client.create_collection(
-                collection_name=settings.QDRANT_RECIPE_COLLECTION,
-                vectors_config=VectorParams(
-                    size=vector_size,
-                    distance=Distance.COSINE
-                )
-            )
-        else:
-            qdrant_client.delete_collection(collection_name=settings.QDRANT_RECIPE_COLLECTION)
-            vector_size = 768
-            qdrant_client.create_collection(
-                collection_name=settings.QDRANT_RECIPE_COLLECTION,
-                vectors_config=VectorParams(
-                    size=vector_size,
-                    distance=Distance.COSINE
-                )
-            )
-
-        # Initialize Qdrant vector store
-        vector_store = QdrantVectorStore(
-            client=qdrant_client,
-            collection_name=settings.QDRANT_RECIPE_COLLECTION,
-            embedding=embedding_model
-        )
 
         # Collect all chunks
         all_chunks = []
@@ -101,10 +71,11 @@ async def main():
         for recipe in all_recipes:
             try:
                 # Prepare document content
-                content = f"## Tên món {recipe.title}\n\n"
-                content += f"## Nguyên Liệu \n\n{recipe.ingredientMarkdown}"
-                content += f"## Cách làm \n\n {recipe.stepMarkdown}"
+                content = f"# Tên món: {recipe.title}\n\n"
+                content += f"## Nguyên Liệu \n\n{recipe.ingredientMarkdown}\n\n"
+                content += f"## Cách làm \n\n{recipe.stepMarkdown}"
 
+                servings_num = extract_number(recipe.quantitative)
                 # Create Document
                 document = Document(
                     page_content=content,
@@ -112,6 +83,8 @@ async def main():
                         "title": recipe.title,
                         "id": recipe.id,
                         "source": settings.QDRANT_RECIPE_COLLECTION,
+                        "quantitative_text": recipe.quantitative,
+                        "servings": servings_num
                     }
                 )
 
@@ -139,7 +112,7 @@ async def main():
         for i in range(0, len(all_chunks), batch_size_vector):
             batch_chunks = all_chunks[i:i + batch_size_vector]
             batch_ids = all_ids[i:i + batch_size_vector]
-            await vector_store.aadd_documents(
+            await qdrant_store.add_documents(
                 documents=batch_chunks,
                 ids=batch_ids
             )
