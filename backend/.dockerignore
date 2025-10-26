@@ -76,3 +76,5 @@ node_modules/
 backup_*.sql
 *.tar.gz
 
+resources/
+

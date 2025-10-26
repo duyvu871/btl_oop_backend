@@ -8,6 +8,8 @@ htmlcov
 .venv
 
 playground/
-resources/
+# Ignore resource zip files but not the resources directory
+!resources/*.zip
+!resources/*.gz
 .vscode/
 .DS_Store
