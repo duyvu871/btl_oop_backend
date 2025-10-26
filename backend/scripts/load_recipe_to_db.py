@@ -1,6 +1,7 @@
 import asyncio
 import gzip
 import os
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -45,6 +46,20 @@ class DishRaw(BaseModel):
     tutorial_step: list[TutorialStepRaw] | None
 
 
+def normalize_whitespace(text: str | None) -> str:
+    """
+    Remove excessive whitespace (3+ consecutive spaces) and normalize to single space.
+    Also strips leading/trailing whitespace.
+    """
+    if not text:
+        return ""
+    # Replace 3 or more consecutive spaces with a single space
+    text = re.sub(r" {3,}", " ", text)
+    # Also normalize other whitespace characters if needed
+    text = re.sub(r"\s{3,}", " ", text)
+    return text.strip()
+
+
 def count_items_in_json(path: str) -> int:
     count = 0
     with open(path, "rb") as f:
@@ -65,37 +80,37 @@ async def process_file(path: str):
                 for obj in ijson.items(f, "item"):
                     try:
                         dish = DishRaw.model_validate(obj)
-                        # Insert recipe
+                        # Insert recipe with normalized whitespace
                         recipe = Recipe(
                             link=str(dish.link),
-                            title=dish.title,
+                            title=normalize_whitespace(dish.title),
                             thumbnail=str(dish.thumbnail) if dish.thumbnail else None,
-                            tutorial=dish.tutorial or "",
-                            quantitative=dish.quantitative or "",
-                            ingredientTitle=dish.ingredient_title or "",
-                            ingredientMarkdown=dish.ingredient_markdown or "",
-                            stepMarkdown=dish.step_markdown or "",
+                            tutorial=normalize_whitespace(dish.tutorial),
+                            quantitative=normalize_whitespace(dish.quantitative),
+                            ingredientTitle=normalize_whitespace(dish.ingredient_title),
+                            ingredientMarkdown=normalize_whitespace(dish.ingredient_markdown),
+                            stepMarkdown=normalize_whitespace(dish.step_markdown),
                         )
                         session.add(recipe)
                         await session.flush()  # Get the recipe ID
 
-                        # Insert ingredients
+                        # Insert ingredients with normalized whitespace
                         for ing in dish.ingredients or []:
                             ingredient = Ingredient(
                                 recipe_id=recipe.id,
-                                name=ing.name,
-                                quantity=ing.quantitative or "",
-                                unit=ing.unit or "",
+                                name=normalize_whitespace(ing.name),
+                                quantity=normalize_whitespace(ing.quantitative),
+                                unit=normalize_whitespace(ing.unit),
                             )
                             session.add(ingredient)
 
-                        # Insert steps
+                        # Insert steps with normalized whitespace
                         for step in dish.tutorial_step or []:
                             step_obj = Step(
                                 recipe_id=recipe.id,
                                 index=step.index,
-                                title=step.title or "",
-                                content=step.content or "",
+                                title=normalize_whitespace(step.title),
+                                content=normalize_whitespace(step.content),
                                 box_gallery=[str(url) for url in step.box_gallery or []],
                             )
                             session.add(step_obj)

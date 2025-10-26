@@ -1,17 +1,31 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from src.core.database.database import AsyncSessionLocal
-from src.core.database.models import Recipe
+from src.core.database.models import Recipe, User
+from src.core.security import get_current_user
+from src.schemas.recipe import RecipeRead, RecommendRequest, RecommendResponse
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
 
-@router.post("/recommend")
-async def recommend(text: str):
+@router.post("/recommend", response_model=RecommendResponse)
+async def recommend(
+    request: RecommendRequest,
+    current_user: User = Depends(get_current_user),
+):
     """
-    Mock recommend endpoint that returns recipes with joined ingredients and steps.
+    Get recipe recommendations based on user's text input.
+
+    Requires authentication. Returns a list of recipes matching the user's query.
+
+    Args:
+        request: RecommendRequest containing the search text
+        current_user: Authenticated user (injected by dependency)
+
+    Returns:
+        RecommendResponse with recommended recipes
     """
     async with AsyncSessionLocal() as session:
         result = await session.execute(
@@ -21,44 +35,11 @@ async def recommend(text: str):
         )
         recipes = result.unique().scalars().all()
 
-    # Convert to dict format
-    recipes_data = []
-    for recipe in recipes:
-        recipe_dict = {
-            "id": recipe.id,
-            "link": recipe.link,
-            "title": recipe.title,
-            "thumbnail": recipe.thumbnail,
-            "tutorial": recipe.tutorial,
-            "quantitative": recipe.quantitative,
-            "ingredientTitle": recipe.ingredientTitle,
-            "ingredientMarkdown": recipe.ingredientMarkdown,
-            "stepMarkdown": recipe.stepMarkdown,
-            "created_at": recipe.created_at.isoformat() if recipe.created_at else None,
-            "updated_at": recipe.updated_at.isoformat() if recipe.updated_at else None,
-            "ingredients": [
-                {
-                    "id": ing.id,
-                    "name": ing.name,
-                    "quantity": ing.quantity,
-                    "unit": ing.unit,
-                }
-                for ing in recipe.ingredients
-            ],
-            "tutorial_steps": [
-                {
-                    "id": step.id,
-                    "index": step.index,
-                    "title": step.title,
-                    "content": step.content,
-                    "box_gallery": step.box_gallery,
-                }
-                for step in recipe.tutorial_steps
-            ],
-        }
-        recipes_data.append(recipe_dict)
+    # Convert to Pydantic models
+    recipes_data = [RecipeRead.model_validate(recipe) for recipe in recipes]
 
-    return {
-        "message": f"Mock recommendations for text: '{text}'",
-        "recipes": recipes_data,
-    }
+    return RecommendResponse(
+        message=f"Recommendations for: '{request.query}'",
+        recipes=recipes_data,
+        total=len(recipes_data),
+    )
