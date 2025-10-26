@@ -1,4 +1,4 @@
-.PHONY: help dev prod up down build rebuild logs shell db-shell redis-shell clean migrate seed load-recipes load-recipes-prod compress-resources load-vector-store test docs
+.PHONY: help dev prod up down build rebuild logs shell db-shell redis-shell clean migrate seed load-recipes load-recipes-prod compress-resources load-vector-store test docs lint format deploy-prod deploy-dev
 
 # Default target
 help:
@@ -12,36 +12,26 @@ help:
 	@echo "  make logs          - Show logs from all services"
 	@echo "  make logs-api      - Show logs from FastAPI service"
 	@echo "  make logs-fe       - Show logs from Frontend service"
-	@echo "  make logs-fe       - Show logs from Frontend service"
-	@echo "  make shell-fe      - Open shell in Frontend container"
-	@echo "  make logs-fe       - Show logs from Frontend service"
-	@echo "  make shell-fe      - Open shell in Frontend container"
-	@echo "  make logs-fe       - Show logs from Frontend service"
-	@echo "  make shell-fe      - Open shell in Frontend container"
+	@echo "  make logs-worker   - Show logs from worker service"
 	@echo "  make shell         - Open shell in FastAPI container"
 	@echo "  make shell-fe      - Open shell in Frontend container"
 	@echo "  make db-shell      - Open PostgreSQL shell"
-	@echo "  make test-fe       - Run frontend tests"
 	@echo "  make redis-shell   - Open Redis CLI"
 	@echo "  make clean         - Remove all containers and volumes"
-	@echo "  make lint-fe       - Run frontend linting"
-	@echo "  make test-fe       - Run frontend tests"
 	@echo "  make migrate       - Run database migrations"
 	@echo "  make migrate-create - Create new migration"
-	@echo "  make lint-fe       - Run frontend linting"
-	@echo "  make test-fe       - Run frontend tests"
 	@echo "  make seed          - Seed database with initial data"
 	@echo "  make load-recipes   - Load recipes from JSON file"
 	@echo "  make load-recipes-prod - Load recipes from JSON file (production)"
 	@echo "  make compress-resources - Compress resources file to gzip"
 	@echo "  make load-vector-store   - Load recipes to vector store (Qdrant)"
+	@echo "  make search        - Run similarity search test"
 	@echo "  make test          - Run tests"
-	@echo "  make lint-fe       - Run frontend linting"
-	@echo "  make test-fe       - Run frontend tests"
 	@echo "  make docs          - Start MkDocs server"
 	@echo "  make lint          - Run linting"
-	@echo "  make lint-fe       - Run frontend linting"
 	@echo "  make format        - Format code"
+	@echo "  make deploy-dev    - Deploy to development environment"
+	@echo "  make deploy-prod   - Deploy to production environment"
 
 # Development environment
 dev:
@@ -102,222 +92,87 @@ logs-worker:
 logs-db:
 	docker-compose -f docker-compose.dev.yml logs -f postgres
 
-# Show logs from Redis
-logs-redis:
-	docker-compose -f docker-compose.dev.yml logs -f redis
-
-# Show logs from Qdrant
-logs-qdrant:
-	docker-compose -f docker-compose.dev.yml logs -f qdrant
-
-# Show production logs
-logs-prod:
-	docker-compose -f docker-compose.prod.yml logs -f
-
-logs-api-prod:
-	docker-compose -f docker-compose.prod.yml logs -f fastapi
-
 # Open shell in FastAPI container
 shell:
-	docker-compose -f docker-compose.dev.yml exec fastapi /bin/sh
-
-# Open shell in production FastAPI container
-shell-prod:
-	docker-compose -f docker-compose.prod.yml exec fastapi /bin/sh
+	docker-compose -f docker-compose.dev.yml exec fastapi bash
 
 # Open shell in Frontend container
 shell-fe:
-	docker-compose -f docker-compose.dev.yml exec frontend /bin/sh
+	docker-compose -f docker-compose.dev.yml exec frontend sh
 
+# Open PostgreSQL shell
+db-shell:
+	docker-compose -f docker-compose.dev.yml exec postgres psql -U $$(grep POSTGRES_USER .env.dev | cut -d '=' -f2) -d $$(grep POSTGRES_DB .env.dev | cut -d '=' -f2)
 
-# Clean up containers and volumes
+# Open Redis CLI
+redis-shell:
+	docker-compose -f docker-compose.dev.yml exec redis redis-cli
+
+# Remove all containers and volumes
 clean:
-	docker-compose -f docker-compose.dev.yml down -v
+	docker-compose -f docker-compose.dev.yml down -v --remove-orphans
 	docker system prune -f
 
-# Clean production
-clean-prod:
-	docker-compose -f docker-compose.prod.yml down -v
-	docker system prune -f
-
-# Run database migrations
+# Database migrations
 migrate:
 	docker-compose -f docker-compose.dev.yml exec fastapi uv run alembic upgrade head
 
-# Run database migrations in production
-migrate-prod:
-	docker-compose -f docker-compose.prod.yml exec fastapi uv run alembic upgrade head
-
-# Create new migration
 migrate-create:
+	@echo "Creating new migration..."
 	@read -p "Enter migration message: " msg; \
 	docker-compose -f docker-compose.dev.yml exec fastapi uv run alembic revision --autogenerate -m "$$msg"
 
-# Rollback migration
-migrate-rollback:
-	docker-compose -f docker-compose.dev.yml exec fastapi uv run alembic downgrade -1
-
-# Rollback production migration
-migrate-rollback-prod:
-	docker-compose -f docker-compose.prod.yml exec fastapi uv run alembic downgrade -1
-
 # Seed database
 seed:
-	docker-compose -f docker-compose.dev.yml exec fastapi uv run python -m src.scripts.seed
-
-# Seed database (production)
-seed-prod:
-	docker-compose -f docker-compose.prod.yml exec fastapi uv run python -m src.scripts.seed
-
-# Create admin user from environment variables (FIRST_SUPERUSER, FIRST_SUPERUSER_PASSWORD)
-seed-admin:
 	docker-compose -f docker-compose.dev.yml exec fastapi uv run python scripts/seed_admin.py
 
-# Create admin user (production)
-seed-admin-prod:
-	docker-compose -f docker-compose.prod.yml exec fastapi uv run python scripts/seed_admin.py
-
-# Load recipes from JSON file
+# Load recipes (development)
 load-recipes:
 	docker-compose -f docker-compose.dev.yml exec fastapi uv run python scripts/load_recipe_to_db.py
 
-# Load recipes in production from JSON file
+# Load recipes (production)
 load-recipes-prod:
 	docker-compose -f docker-compose.prod.yml exec fastapi uv run python scripts/load_recipe_to_db.py
 
-# Compress resources file to gzip
+# Compress resources
 compress-resources:
-	docker-compose -f docker-compose.dev.yml exec fastapi uv run python scripts/compress_resources_file.py resources/recipesDB.recipes.json
+	docker-compose -f docker-compose.dev.yml exec fastapi uv run python scripts/compress_resources_file.py
 
-# Load recipes to vector store (Qdrant)
+# Load vector store
 load-vector-store:
 	docker-compose -f docker-compose.dev.yml exec fastapi uv run python scripts/load_recipe_to_vector_store.py
+
+# Run similarity search test
+search:
+	docker-compose -f docker-compose.dev.yml exec fastapi uv run python scripts/search_recipe_similarity.py
 
 # Run tests
 test:
 	docker-compose -f docker-compose.dev.yml exec fastapi uv run pytest
 
-# Run frontend tests
-test-fe:
-	cd frontend && npm test
-
-# Run tests with coverage
-test-cov:
-	docker-compose -f docker-compose.dev.yml exec fastapi uv run pytest --cov=src --cov-report=html
-
-# Start MkDocs documentation server
+# Start documentation server
 docs:
-	docker-compose -f docker-compose.dev.yml --profile with-docs up -d mkdocs
-
-restart-fe:
-	docker-compose -f docker-compose.dev.yml restart frontend
-
-# Run frontend linting
-lint-fe:
-	cd frontend && npm run lint
-
-# Start with nginx
-nginx:
-	docker-compose -f docker-compose.dev.yml --profile with-nginx --env-file .env.dev up -d
-
-# Start with nginx (production)
-nginx-prod:
-	docker-compose -f docker-compose.prod.yml --profile with-nginx --env-file .env.prod up -d
+	docker-compose -f docker-compose.dev.yml exec fastapi uv run mkdocs serve -f mkdocs.yml
 
 # Run linting
 lint:
 	docker-compose -f docker-compose.dev.yml exec fastapi uv run ruff check .
+	docker-compose -f docker-compose.dev.yml exec frontend npm run lint
 
 # Format code
 format:
 	docker-compose -f docker-compose.dev.yml exec fastapi uv run ruff format .
+	docker-compose -f docker-compose.dev.yml exec frontend npm run format
 
-# Restart specific service
-restart-api:
-	docker-compose -f docker-compose.dev.yml restart fastapi
+# Deploy to development (placeholder)
+deploy-dev:
+	@echo "🚀 Deploying to development environment..."
+	@echo "This would trigger the development deployment workflow"
+	# Add your dev deployment commands here
 
-restart-worker:
-	docker-compose -f docker-compose.dev.yml restart worker_send_mail
-
-restart-db:
-	docker-compose -f docker-compose.dev.yml restart postgres
-
-restart-redis:
-	docker-compose -f docker-compose.dev.yml restart redis
-
-restart-qdrant:
-	docker-compose -f docker-compose.dev.yml restart qdrant
-
-# Check service status
-status:
-	docker-compose -f docker-compose.dev.yml ps
-
-# Check service status (production)
-status-prod:
-	docker-compose -f docker-compose.prod.yml ps
-
-# Pull latest images
-pull:
-	docker-compose -f docker-compose.dev.yml pull
-
-# Pull latest images (production)
-pull-prod:
-	docker-compose -f docker-compose.prod.yml pull
-
-# Install dependencies
-install:
-	docker-compose -f docker-compose.dev.yml exec fastapi uv sync
-
-# Install dependencies (production)
-install-prod:
-	docker-compose -f docker-compose.prod.yml exec fastapi uv sync
-
-# Create superuser
-create-superuser:
-	docker-compose -f docker-compose.dev.yml exec fastapi uv run python -m src.scripts.create_superuser
-
-# Create superuser (production)
-create-superuser-prod:
-	docker-compose -f docker-compose.prod.yml exec fastapi uv run python -m src.scripts.create_superuser
-
-# Deploy to production (with backup)
+# Deploy to production (triggers GitHub Actions)
 deploy-prod:
-	@echo "Backing up database..."
-	docker-compose -f docker-compose.prod.yml exec postgres pg_dump -U ${POSTGRES_USER} ${POSTGRES_DB} > backup_$$(date +%Y%m%d_%H%M%S).sql
-	@echo "Pulling latest changes..."
-	git pull
-	@echo "Building production images..."
-	docker-compose -f docker-compose.prod.yml build
-	@echo "Running migrations..."
-	docker-compose -f docker-compose.prod.yml up -d postgres redis
-	sleep 5
-	docker-compose -f docker-compose.prod.yml run --rm fastapi uv run alembic upgrade head
-	@echo "Restarting services..."
-	docker-compose -f docker-compose.prod.yml up -d
-	@echo "Deployment complete!"
-
-# Backup database
-backup-db:
-	docker-compose -f docker-compose.dev.yml exec postgres pg_dump -U ${POSTGRES_USER} ${POSTGRES_DB} > backup_$$(date +%Y%m%d_%H%M%S).sql
-
-# Backup production database
-backup-db-prod:
-	docker-compose -f docker-compose.prod.yml exec postgres pg_dump -U ${POSTGRES_USER} ${POSTGRES_DB} > backup_prod_$$(date +%Y%m%d_%H%M%S).sql
-
-# Restore database
-restore-db:
-	@read -p "Enter backup file path: " file; \
-	docker-compose -f docker-compose.dev.yml exec -T postgres psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} < $$file
-
-# Monitor production services
-monitor-prod:
-	docker stats
-
-# Check health status
-health:
-	@echo "Checking services health..."
-	@curl -f http://localhost:8000/health || echo "API is not healthy"
-
-# View production environment
-env-prod:
-	docker-compose -f docker-compose.prod.yml config
+	@echo "🚀 Deploying to production environment..."
+	@echo "This will trigger the CD pipeline on GitHub Actions"
+	git add .
+	git commit -m "Deploy to production" || echo "No changes to commit"

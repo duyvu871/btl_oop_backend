@@ -16,6 +16,8 @@ dependencies = [
     "langchain-google-genai",
     "langchain-text-splitters",
     "langchain-qdrant",
+    "langchain-huggingface",
+    "sentence-transformers>=2.0.0",
     "openai",
     "qdrant-client",
     "psycopg[binary]",
