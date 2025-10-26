@@ -2,7 +2,11 @@ import asyncio
 import sys
 from asyncio import sleep
 from pathlib import Path
+from langchain_core.documents import Document
+from langchain_text_splitters.markdown import MarkdownHeaderTextSplitter
 from tqdm.asyncio import tqdm
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_qdrant import QdrantVectorStore
 
 # Add the project root to the path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -11,6 +15,7 @@ from sqlalchemy import select
 
 from src.core.database.database import AsyncSessionLocal
 from src.core.database.models import Recipe
+from src.settings.env import settings
 
 async def process_recipe(recipe: Recipe):
     """
@@ -18,6 +23,26 @@ async def process_recipe(recipe: Recipe):
     Currently just prints the recipe title.
     TODO: Implement embedding generation and Qdrant insertion.
     """
+    content = str(recipe.title)
+    content += recipe.ingredientMarkdown
+    content += recipe.stepMarkdown
+
+    document = Document(
+        page_content=content,
+        metadata={
+            "title": recipe.title,
+            "id": recipe.id,
+            "source": settings.QDRANT_RECIPE_COLLECTION,
+        }
+    )
+
+    headers_to_split_on = [
+        ("#", "recipe_name"),
+        ("##", "type"),
+    ]
+
+    splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
+
     await sleep(0.001)  # Simulate some processing time
     # print(f"Processing recipe: {recipe.title} (ID: {recipe.id})")
 
