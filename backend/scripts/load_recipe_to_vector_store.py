@@ -17,7 +17,7 @@ from qdrant_client.http.models import VectorParams, Distance
 # Add the project root to the path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from src.core.database.database import AsyncSessionLocal
 from src.core.database.models import Recipe
@@ -29,12 +29,21 @@ async def main():
     Fetch all recipes from the database and process each one.
     """
     async with AsyncSessionLocal() as session:
-        batch_size = 200
-        offset = 0
-        result = await session.execute(select(Recipe).offset(offset).limit(batch_size))
-        recipes = result.scalars().all()
+        # Get total count of recipes
+        total_recipes = await session.execute(select(func.count(Recipe.id)))
+        total_count = total_recipes.scalar()
+        print(f"Found {total_count} recipes in the database.")
 
-        print(f"Found {len(recipes)} recipes in the database.")
+        batch_size = 200
+        all_recipes = []
+        offset = 0
+        while True:
+            result = await session.execute(select(Recipe).offset(offset).limit(batch_size))
+            recipes = result.scalars().all()
+            if not recipes:
+                break
+            all_recipes.extend(recipes)
+            offset += batch_size
 
         # Initialize splitter, embedding model, and Qdrant client once
         splitter = MarkdownHeaderTextSplitter(headers_to_split_on=[
@@ -78,12 +87,16 @@ async def main():
             collection_name=settings.QDRANT_RECIPE_COLLECTION,
             embedding=embedding_model
         )
+
+        # Collect all chunks
+        all_chunks = []
+        all_ids = []
+
         # Progress bar
-        pbar = tqdm(total=len(recipes), desc="Processing recipes", unit="recipe")
+        pbar = tqdm(total=total_count, desc="Processing recipes", unit="recipe")
 
         # Process each recipe
-        for recipe in recipes:
-            # Process each recipe
+        for recipe in all_recipes:
             try:
                 # Prepare document content
                 content = f"## Tên món {recipe.title}\n\n"
@@ -100,32 +113,36 @@ async def main():
                     }
                 )
 
-                chunks = []
                 # Split document into chunks
                 split_docs = splitter.split_text(document.page_content)
                 for split_doc in split_docs:
-                    chunks.append(
+                    all_chunks.append(
                         Document(
                             page_content=split_doc.page_content,
                             metadata={**split_doc.metadata, **document.metadata},
                         )
                     )
-                # Generate unique IDs for each chunk
-                chunks_ids = [str(uuid.uuid4()) for _ in range(len(chunks))]
-                # Add documents to vector store
-                await vector_store.aadd_documents(
-                    documents=chunks,
-                    ids=chunks_ids
-                )
-
-                await sleep(0.001)
+                    all_ids.append(str(uuid.uuid4()))
 
             except Exception as e:
                 print(f"Error processing recipe {recipe.id}: {e}")
                 raise e
-            # Process each recipe
             pbar.update(1)
         pbar.close()
+
+        # Add all documents to vector store in batches
+        batch_size_vector = 500
+        num_batches = (len(all_chunks) + batch_size_vector - 1) // batch_size_vector
+        add_pbar = tqdm(total=num_batches, desc="Adding to vector store", unit="batch")
+        for i in range(0, len(all_chunks), batch_size_vector):
+            batch_chunks = all_chunks[i:i + batch_size_vector]
+            batch_ids = all_ids[i:i + batch_size_vector]
+            await vector_store.aadd_documents(
+                documents=batch_chunks,
+                ids=batch_ids
+            )
+            add_pbar.update(1)
+        add_pbar.close()
 
 if __name__ == "__main__":
     asyncio.run(main())

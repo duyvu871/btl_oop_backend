@@ -2,8 +2,6 @@ import asyncio
 import sys
 from pathlib import Path
 from typing import List, Dict, Any
-from langchain_core.documents import Document
-from pydantic import SecretStr
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
