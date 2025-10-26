@@ -19,34 +19,42 @@ router = APIRouter(
     tags=["auth"],
 )
 
+
 class Token(BaseModel):
     access_token: str
     token_type: str
+
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
+
 class VerifyEmailRequest(BaseModel):
     email: EmailStr
     code: str
+
 
 class VerifyEmailResponse(BaseModel):
     success: bool
     message: str
     remaining_attempts: int | None = None
 
+
 class ResendVerificationRequest(BaseModel):
     email: EmailStr
+
 
 class ResendVerificationResponse(BaseModel):
     success: bool
     message: str
 
+
 class AuthResponse(BaseModel):
     access_token: str | None = None
     refresh_token: str | None = None
     user: UserRead
+
 
 # Error messages as simple strings
 class ResponseMessage:
@@ -57,6 +65,7 @@ class ResponseMessage:
     INCORRECT_EMAIL_OR_PASSWORD = "Incorrect email or password"
     VERIFICATION_EMAIL_SENT = "Verification email sent successfully"
     RATE_LIMIT_EXCEEDED = "Too many use_cases requests. Please try again later."
+
 
 @router.post("/login", response_model=AuthResponse)
 async def login(login_in: LoginRequest, db: AsyncSession = Depends(get_db)):
@@ -78,13 +87,8 @@ async def login(login_in: LoginRequest, db: AsyncSession = Depends(get_db)):
         )
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
-    )
-    return {
-        "access_token": access_token,
-        "user": UserRead.model_validate(user)
-    }
+    access_token = create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
+    return {"access_token": access_token, "user": UserRead.model_validate(user)}
 
 
 @router.post("/register", response_model=AuthResponse)
@@ -92,17 +96,14 @@ async def login(login_in: LoginRequest, db: AsyncSession = Depends(get_db)):
 async def register_user(
     user_in: UserCreate,
     db: AsyncSession = Depends(get_db),
-    verification_use_case: VerificationUseCase = Depends(get_verification_usecase)
+    verification_use_case: VerificationUseCase = Depends(get_verification_usecase),
 ):
     # Check if user already exists
     result = await db.execute(select(User).where(User.email == user_in.email))
     user = result.scalar_one_or_none()
 
     if user:
-        raise HTTPException(
-            status_code=400,
-            detail=ResponseMessage.EMAIL_ALREADY_REGISTERED
-        )
+        raise HTTPException(status_code=400, detail=ResponseMessage.EMAIL_ALREADY_REGISTERED)
 
     print("Registering user:", user_in.email, user_in.password)
     user_name = str(user_in.email).split("@")[0]
@@ -134,10 +135,7 @@ async def register_user(
 
 
 @router.post("/token", response_model=Token)
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db)
-):
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.user_name == form_data.username))
     user = result.scalar_one_or_none()
 
@@ -156,22 +154,20 @@ async def login_for_access_token(
         )
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
-    )
+    access_token = create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 @router.get("/me", response_model=UserRead)
 async def read_users_me(current_user: User = Depends(get_verified_user)):
     return UserRead.model_validate(current_user)
 
 
-
 @router.post("/verify-email", response_model=VerifyEmailResponse)
 async def verify_email(
     request: VerifyEmailRequest,
     db: AsyncSession = Depends(get_db),
-    verification_use_case: VerificationUseCase = Depends(get_verification_usecase)
+    verification_use_case: VerificationUseCase = Depends(get_verification_usecase),
 ):
     """
     Verify user's email with use_cases code.
@@ -192,23 +188,14 @@ async def verify_email(
     user = result.scalar_one_or_none()
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     # Check if already verified
     if user.verified:
-        return VerifyEmailResponse(
-            success=True,
-            message="Email is already verified"
-        )
+        return VerifyEmailResponse(success=True, message="Email is already verified")
 
     # Verify the code
-    verification_result = await verification_use_case.verify_email(
-        email=str(request.email),
-        code=request.code
-    )
+    verification_result = await verification_use_case.verify_email(email=str(request.email), code=request.code)
 
     if not verification_result["valid"]:
         remaining = verification_result.get("remaining_attempts")
@@ -216,12 +203,12 @@ async def verify_email(
         if remaining is not None and remaining > 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid use_cases code. {remaining} attempts remaining."
+                detail=f"Invalid use_cases code. {remaining} attempts remaining.",
             )
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid or expired use_cases code. Please request a new one."
+                detail="Invalid or expired use_cases code. Please request a new one.",
             )
 
     # Update user's verified status
@@ -229,17 +216,14 @@ async def verify_email(
     await db.commit()
     await db.refresh(user)
 
-    return VerifyEmailResponse(
-        success=True,
-        message="Email verified successfully"
-    )
+    return VerifyEmailResponse(success=True, message="Email verified successfully")
 
 
 @router.post("/resend-verification", response_model=ResendVerificationResponse)
 async def resend_verification_email(
     request: ResendVerificationRequest,
     db: AsyncSession = Depends(get_db),
-    verification_use_case: VerificationUseCase = Depends(get_verification_usecase)
+    verification_use_case: VerificationUseCase = Depends(get_verification_usecase),
 ):
     """
     Resend use_cases email to user.
@@ -260,17 +244,11 @@ async def resend_verification_email(
     user = result.scalar_one_or_none()
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     # Check if already verified
     if user.verified:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email is already verified"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is already verified")
 
     # Send use_cases email
     try:
@@ -284,18 +262,13 @@ async def resend_verification_email(
         )
         print(f"Verification email queued with job ID: {job_id}")
 
-        return ResendVerificationResponse(
-            success=True,
-            message="Verification email sent successfully"
-        )
+        return ResendVerificationResponse(success=True, message="Verification email sent successfully")
     except Exception as e:
         error_msg = str(e)
         if "Too many requests" in error_msg:
             raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=ResponseMessage.RATE_LIMIT_EXCEEDED
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=ResponseMessage.RATE_LIMIT_EXCEEDED
             )
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to send use_cases email: {error_msg}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to send use_cases email: {error_msg}"
         )

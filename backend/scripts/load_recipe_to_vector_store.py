@@ -2,6 +2,7 @@ import asyncio
 import sys
 from asyncio import sleep
 from pathlib import Path
+
 from tqdm.asyncio import tqdm
 
 # Add the project root to the path
@@ -12,6 +13,7 @@ from sqlalchemy import select
 from src.core.database.database import AsyncSessionLocal
 from src.core.database.models import Recipe
 
+
 async def process_recipe(recipe: Recipe):
     """
     Placeholder function to process a single recipe.
@@ -20,6 +22,7 @@ async def process_recipe(recipe: Recipe):
     """
     await sleep(0.001)  # Simulate some processing time
     # print(f"Processing recipe: {recipe.title} (ID: {recipe.id})")
+
 
 async def main():
     """
@@ -35,6 +38,7 @@ async def main():
             await process_recipe(recipe)
             pbar.update(1)
         pbar.close()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

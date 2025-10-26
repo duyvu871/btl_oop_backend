@@ -1,6 +1,7 @@
 """
 ARQ Worker for sending emails asynchronously via Redis queue.
 """
+
 import logging
 from typing import Any
 
@@ -108,9 +109,8 @@ async def send_email_task(ctx: dict[str, Any], email_data: dict[str, Any]) -> bo
         raise
     except Exception as e:
         logger.error(
-            f"Unexpected error in send_email_task for {email_type} to {recipient}: "
-            f"{type(e).__name__} - {str(e)}",
-            exc_info=True
+            f"Unexpected error in send_email_task for {email_type} to {recipient}: {type(e).__name__} - {str(e)}",
+            exc_info=True,
         )
         raise
 
@@ -136,6 +136,7 @@ class WorkerSettings:
     """
     ARQ Worker settings configuration.
     """
+
     redis_settings = RedisSettings(
         host=settings.REDIS_HOST,
         port=settings.REDIS_PORT,
@@ -185,10 +186,7 @@ async def enqueue_email(email_data: dict[str, Any]) -> str | None:
     """
     try:
         redis = await get_redis_pool()
-        job = await redis.enqueue_job(
-            "send_email_task",
-            email_data
-        )
+        job = await redis.enqueue_job("send_email_task", email_data)
         logger.info(f"Email job enqueued: {job.job_id}")
         await redis.close()
         return job.job_id

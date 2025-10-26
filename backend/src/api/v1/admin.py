@@ -34,9 +34,7 @@ async def list_users(
     # Apply filters
     if search:
         search_term = f"%{search}%"
-        query = query.where(
-            (User.email.ilike(search_term)) | (User.user_name.ilike(search_term))
-        )
+        query = query.where((User.email.ilike(search_term)) | (User.user_name.ilike(search_term)))
 
     if role:
         try:
@@ -44,8 +42,7 @@ async def list_users(
             query = query.where(User.role == role_enum)
         except KeyError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid role: {role}. Must be 'user' or 'admin'"
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid role: {role}. Must be 'user' or 'admin'"
             )
 
     if verified is not None:
@@ -65,10 +62,7 @@ async def list_users(
     users = result.scalars().all()
 
     return UserListResponse(
-        total=total,
-        page=page,
-        page_size=page_size,
-        users=[UserAdminRead.model_validate(user) for user in users]
+        total=total, page=page, page_size=page_size, users=[UserAdminRead.model_validate(user) for user in users]
     )
 
 
@@ -83,10 +77,7 @@ async def get_user(
     user = result.scalar_one_or_none()
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     return UserAdminRead.model_validate(user)
 
@@ -103,17 +94,11 @@ async def update_user(
     user = result.scalar_one_or_none()
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     # Prevent admin from demoting themselves
     if user.id == current_admin.id and user_update.role and user_update.role.lower() != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot change your own admin role"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot change your own admin role")
 
     # Update fields
     update_data = user_update.model_dump(exclude_unset=True)
@@ -124,8 +109,7 @@ async def update_user(
                 value = Role[value.upper()]
             except KeyError:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid role: {value}. Must be 'user' or 'admin'"
+                    status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid role: {value}. Must be 'user' or 'admin'"
                 )
         setattr(user, field, value)
 
@@ -146,17 +130,11 @@ async def delete_user(
     user = result.scalar_one_or_none()
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     # Prevent admin from deleting themselves
     if user.id == current_admin.id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot delete your own account"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete your own account")
 
     await db.delete(user)
     await db.commit()
@@ -176,23 +154,18 @@ async def get_user_stats(
     total_users = total_users_result.scalar_one()
 
     # Verified users
-    verified_users_result = await db.execute(
-        select(func.count(User.id)).where(User.verified)
-    )
+    verified_users_result = await db.execute(select(func.count(User.id)).where(User.verified))
     verified_users = verified_users_result.scalar_one()
 
     # Admin users
-    admin_users_result = await db.execute(
-        select(func.count(User.id)).where(User.role == Role.ADMIN)
-    )
+    admin_users_result = await db.execute(select(func.count(User.id)).where(User.role == Role.ADMIN))
     admin_users = admin_users_result.scalar_one()
 
     # Recent users (last 7 days)
     from datetime import datetime, timedelta
+
     seven_days_ago = datetime.now() - timedelta(days=7)
-    recent_users_result = await db.execute(
-        select(func.count(User.id)).where(User.created_at >= seven_days_ago)
-    )
+    recent_users_result = await db.execute(select(func.count(User.id)).where(User.created_at >= seven_days_ago))
     recent_users = recent_users_result.scalar_one()
 
     return {
@@ -204,6 +177,7 @@ async def get_user_stats(
         "recent_users": recent_users,
     }
 
+
 @router.post("/users/bulk-action")
 async def bulk_action_users(
     user_ids: list[UUID],
@@ -213,20 +187,14 @@ async def bulk_action_users(
 ):
     """Perform bulk actions on multiple users."""
     if not user_ids:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No user IDs provided"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No user IDs provided")
 
     # Fetch users
     result = await db.execute(select(User).where(User.id.in_(user_ids)))
     users = result.scalars().all()
 
     if not users:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No users found with provided IDs"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No users found with provided IDs")
 
     # Check if admin is trying to modify themselves
     admin_in_list = any(user.id == current_admin.id for user in users)
@@ -253,10 +221,7 @@ async def bulk_action_users(
 
     elif action == "demote":
         if admin_in_list:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot demote yourself"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot demote yourself")
         for user in users:
             if user.role == Role.ADMIN:
                 user.role = Role.USER
@@ -264,28 +229,18 @@ async def bulk_action_users(
 
     elif action == "delete":
         if admin_in_list:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot delete your own account"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete your own account")
         for user in users:
             await db.delete(user)
             updated_count += 1
 
     else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid action: {action}"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid action: {action}")
 
     await db.commit()
 
-    return {
-        "success": True,
-        "action": action,
-        "updated_count": updated_count,
-        "total_requested": len(user_ids)
-    }
+    return {"success": True, "action": action, "updated_count": updated_count, "total_requested": len(user_ids)}
+
 
 @router.post("/users", response_model=UserAdminRead)
 async def create_user(
@@ -299,16 +254,14 @@ async def create_user(
     existing_user = result.scalar_one_or_none()
 
     if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User with this email already exists"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User with this email already exists")
 
     # Generate user_name if not provided
     user_name = user_data.user_name or user_data.email.split("@")[0]
 
     # Hash password
     from src.core.security import get_password_hash
+
     hashed_password = get_password_hash(user_data.password)
 
     # Create user

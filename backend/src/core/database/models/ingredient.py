@@ -16,9 +16,12 @@ if TYPE_CHECKING:
 
 class Ingredient(Base):
     """Ingredient model for recipe ingredients."""
+
     __tablename__ = "ingredients"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False
+    )
     recipe_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("recipes.id"), nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
     quantity: Mapped[str] = mapped_column(String, nullable=False)  # e.g., "3 quả"

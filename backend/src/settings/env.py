@@ -1,4 +1,3 @@
-
 from pydantic_settings import BaseSettings
 
 
@@ -63,13 +62,7 @@ class Settings(BaseSettings):
 
     def validate_smtp_config(self) -> bool:
         """Check if SMTP is properly configured"""
-        return all([
-            self.SMTP_HOST,
-            self.SMTP_PORT,
-            self.SMTP_USER,
-            self.SMTP_PASSWORD,
-            self.EMAILS_FROM_EMAIL
-        ])
+        return all([self.SMTP_HOST, self.SMTP_PORT, self.SMTP_USER, self.SMTP_PASSWORD, self.EMAILS_FROM_EMAIL])
 
 
 # Create an instance of Settings to use throughout the application

@@ -3,6 +3,7 @@ Seed admin user from environment variables.
 Reads FIRST_SUPERUSER, FIRST_SUPERUSER_PASSWORD, FIRST_SUPERUSER_USERNAME
 Usage: python backend/scripts/seed_admin.py
 """
+
 import asyncio
 import os
 import sys
@@ -55,12 +56,7 @@ async def seed_admin():
         # Create new admin user
         hashed_password = get_password_hash(password)
         admin_user = User(
-            user_name=username,
-            email=email,
-            password=hashed_password,
-            role=Role.ADMIN,
-            verified=True,
-            preferences=[]
+            user_name=username, email=email, password=hashed_password, role=Role.ADMIN, verified=True, preferences=[]
         )
 
         db.add(admin_user)

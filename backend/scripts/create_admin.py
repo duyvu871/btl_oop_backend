@@ -2,6 +2,7 @@
 Script to create an admin user for testing.
 Run this script to create an admin user in the database.
 """
+
 import asyncio
 import sys
 from pathlib import Path
@@ -48,7 +49,7 @@ async def create_admin_user(email: str, password: str, user_name: str = None):
             password=hashed_password,
             role=Role.ADMIN,
             verified=True,  # Auto-verify admin
-            preferences=[]
+            preferences=[],
         )
 
         db.add(admin_user)

@@ -17,9 +17,12 @@ if TYPE_CHECKING:
 
 class Pantry(Base):
     """Pantry model for user's personal ingredients."""
+
     __tablename__ = "pantries"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False
+    )
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     ingredient_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("ingredients.id"), nullable=False)
     quantity: Mapped[str] = mapped_column(String, nullable=False)  # e.g., "2 quả", "500g"
