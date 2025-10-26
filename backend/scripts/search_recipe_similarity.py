@@ -1,7 +1,8 @@
 import asyncio
 import sys
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any
+
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
@@ -39,7 +40,7 @@ class RecipeSimilaritySearch:
         query: str,
         top_k: int = 5,
         score_threshold: float = 0.0
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Search for similar recipes based on the query text.
 
@@ -82,7 +83,7 @@ class RecipeSimilaritySearch:
             print(f"Error during similarity search: {e}")
             return []
 
-    def get_collection_info(self) -> Dict[str, Any]:
+    def get_collection_info(self) -> dict[str, Any]:
         """Get information about the Qdrant collection."""
         try:
             collection_info = self.qdrant_client.get_collection(

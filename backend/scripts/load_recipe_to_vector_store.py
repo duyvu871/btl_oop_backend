@@ -1,23 +1,25 @@
 import asyncio
 import sys
 import uuid
-from asyncio import sleep
 from pathlib import Path
+
 from langchain_core.documents import Document
-from langchain_text_splitters.markdown import MarkdownHeaderTextSplitter
-# from pydantic import SecretStr
-from tqdm.asyncio import tqdm
+
 # from langchain_google_genai import GoogleGenerativeAIEmbeddings
 # from sentence_transformers import SentenceTransformer
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_qdrant import QdrantVectorStore
+from langchain_text_splitters.markdown import MarkdownHeaderTextSplitter
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import VectorParams, Distance
+from qdrant_client.http.models import Distance, VectorParams
+
+# from pydantic import SecretStr
+from tqdm.asyncio import tqdm
 
 # Add the project root to the path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 
 from src.core.database.database import AsyncSessionLocal
 from src.core.database.models import Recipe

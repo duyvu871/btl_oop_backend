@@ -1,4 +1,3 @@
-from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -66,3 +65,11 @@ class RecommendResponse(BaseModel):
     recipes: list[RecipeRead]
     total: int = Field(description="Total number of recipes returned")
 
+
+class SearchResponse(BaseModel):
+    """Schema for search response"""
+
+    recipes: list[RecipeRead]
+    total: int = Field(description="Total number of recipes matching the query")
+    page: int | None = Field(default=None, description="Current page number")
+    size: int | None = Field(default=None, description="Number of recipes per page")
