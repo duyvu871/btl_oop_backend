@@ -141,14 +141,14 @@ def send_verification_email(
     custom_message: str | None = None,
 ) -> bool:
     """
-    Send a use_cases email to a user.
+    Send a verification email to a user.
 
     Args:
         to: User's email address
-        verification_token: Verification code (6 digits) for email use_cases
+        verification_token: Verification code (6 digits) for email verification
         user_name: User's display name (optional)
         user_email: User's email for display (optional)
-        expiry_hours: Hours until use_cases link expires (default: 24)
+        expiry_hours: Hours until verification link expires (default: 24)
         company_name: Company/App name (optional)
         logo_url: Company logo URL (optional)
         custom_message: Additional custom message (optional)
@@ -169,7 +169,7 @@ def send_verification_email(
         "logo_url": logo_url,
         "custom_message": custom_message,
     }
-    text_content, html_content = render_email("emails/use_cases", context)
+    text_content, html_content = render_email("emails/verification", context)
     return send_email(
         to=to,
         subject=subject,
