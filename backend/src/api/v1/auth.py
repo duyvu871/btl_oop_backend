@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from src.core.database.database import get_db
-from src.core.database.models.user import User
+from src.core.database.models import User
 from src.core.decorator.timer import timer
 from src.core.security import create_access_token, get_password_hash, get_verified_user, verify_password
 from src.domains.verification.use_cases import VerificationUseCase, get_verification_usecase

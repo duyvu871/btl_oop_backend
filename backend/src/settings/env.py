@@ -20,11 +20,17 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
 
+    # Open AI settings
+    OPENAI_API_KEY: str
+    EMBEDDING_MODEL: str = "text-embedding-3-small"
+    COMPLETION_MODEL: str = "gpt-3.5-turbo"
+    RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+
     # Qdrant settings
     QDRANT_URL: str = "http://localhost:6333"
     QDRANT_RECIPE_COLLECTION: str = "recipes"
     QDRANT_PERSONAL_COLLECTION: str = "personal_recommendation"
-    
+
     # JWT settings
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
