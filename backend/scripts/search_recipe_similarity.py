@@ -52,7 +52,7 @@ async def main():
         should=[
             models.FieldCondition(
                 key="metadata.type",
-                match=models.MatchValue(value="Nguyên Liệu")
+                match=models.MatchValue(value="Cách làm")
             )
         ]
     )

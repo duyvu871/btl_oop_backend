@@ -21,13 +21,13 @@ COPY pyproject.toml uv.lock README.md ./
 
 # Install dependencies into a virtual environment
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --no-install-project --no-dev
+    uv sync --no-install-project --no-dev --link-mode=copy
 
 # Copy the application code
 COPY . .
 
 # Install the project itself
-RUN uv sync --no-dev
+RUN uv sync --no-dev --link-mode=copy
 
 # Production stage
 FROM python:3.11-slim
