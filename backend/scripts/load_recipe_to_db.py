@@ -1,10 +1,13 @@
 import asyncio
 import os
 import sys
+import tempfile
+import gzip
 from pathlib import Path
 import ijson
 import json
 from tqdm.asyncio import tqdm
+import httpx
 # Add the project root to the path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -56,7 +59,6 @@ async def process_file(path: str):
                 for obj in ijson.items(f, "item"):
                     try:
                         dish = DishRaw.model_validate(obj)
-                        print(dish.title)
                         # Insert recipe
                         recipe = Recipe(
                             link=str(dish.link),
@@ -104,7 +106,26 @@ async def process_file(path: str):
     print(f"Failed: {failed_count}")
 
 async def main():
-    await process_file("resources/recipesDB.recipes.json")
+    resource_url = "https://raw.githubusercontent.com/duyvu871/btl_oop_backend/main/backend/resources/recipes.qz"
+    print(f"Downloading and decompressing data from {resource_url}...")
+    async with httpx.AsyncClient() as client:
+        response = await client.get(resource_url)
+        response.raise_for_status()
+        compressed_data = response.content
+
+    decompressed_data = gzip.decompress(compressed_data)
+    print("Decompression complete. Saving to temporary file...")
+
+    with tempfile.NamedTemporaryFile(mode='wb', suffix='.json', delete=False) as temp_file:
+        temp_file.write(decompressed_data)
+        temp_path = temp_file.name
+
+    try:
+        print(f"Processing file at {temp_path}...")
+        await process_file(temp_path)
+    finally:
+        os.unlink(temp_path)
+        print("Temporary file cleaned up.")
 
 if __name__ == "__main__":
     asyncio.run(main())
