@@ -2,6 +2,7 @@
 Verification Service for generating and verifying one-time codes.
 Supports email use_cases, password reset, and other use_cases flows.
 """
+
 import secrets
 import time
 from dataclasses import dataclass
@@ -17,6 +18,7 @@ from src.core.redis.provider import get_redis
 @dataclass
 class VerificationOptions:
     """Options for generating/verifying codes."""
+
     namespace: str  # "email-verify" | "password-reset" | ...
     subject: str  # email or userId
     ttl_sec: int = 600  # default 10 minutes
@@ -29,6 +31,7 @@ class VerificationOptions:
 @dataclass
 class GenerateResult:
     """Result from generating a use_cases code."""
+
     code: str  # returned for you to send email/SMS
     expires_at: int  # epoch milliseconds
 
@@ -94,7 +97,7 @@ class VerificationService:
             Random numeric string
         """
         # Use secrets for cryptographically strong randomness
-        return ''.join(str(secrets.randbelow(10)) for _ in range(length))
+        return "".join(str(secrets.randbelow(10)) for _ in range(length))
 
     async def generate(self, opts: VerificationOptions) -> GenerateResult:
         """
@@ -168,9 +171,9 @@ class VerificationService:
 
         # Decode bytes to string if needed
         if isinstance(code_hash, bytes):
-            code_hash = code_hash.decode('utf-8')
+            code_hash = code_hash.decode("utf-8")
         if isinstance(attempts_str, bytes):
-            attempts_str = attempts_str.decode('utf-8')
+            attempts_str = attempts_str.decode("utf-8")
 
         # Check attempts
         try:
@@ -202,11 +205,7 @@ class VerificationService:
         attempts_key = self._key_attempts(namespace, subject)
         await self.redis.delete(code_key, attempts_key)
 
-    async def verify_and_consume(
-        self,
-        opts: VerificationOptions,
-        code: str
-    ) -> bool:
+    async def verify_and_consume(self, opts: VerificationOptions, code: str) -> bool:
         """
         Verify a code and consume it if valid.
 
@@ -222,11 +221,7 @@ class VerificationService:
             await self.consume(opts.namespace, opts.subject)
         return is_valid
 
-    async def get_remaining_attempts(
-        self,
-        namespace: str,
-        subject: str
-    ) -> int | None:
+    async def get_remaining_attempts(self, namespace: str, subject: str) -> int | None:
         """
         Get remaining use_cases attempts.
 
@@ -244,7 +239,7 @@ class VerificationService:
             return None
 
         if isinstance(attempts_str, bytes):
-            attempts_str = attempts_str.decode('utf-8')
+            attempts_str = attempts_str.decode("utf-8")
 
         try:
             return int(attempts_str)
@@ -253,7 +248,7 @@ class VerificationService:
 
 
 # Dependency for FastAPI
-async def get_verification_service(redis = Depends(get_redis)) -> VerificationService:
+async def get_verification_service(redis=Depends(get_redis)) -> VerificationService:
     """
     Get use_cases service instance (FastAPI dependency).
 
@@ -261,4 +256,3 @@ async def get_verification_service(redis = Depends(get_redis)) -> VerificationSe
         VerificationService instance with Redis connection
     """
     return VerificationService(redis)
-

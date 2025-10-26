@@ -1,6 +1,7 @@
 """
 Helper utilities for working with ARQ email worker.
 """
+
 import logging
 from typing import Any
 
@@ -87,11 +88,7 @@ async def queue_password_reset_email(
 
 
 async def queue_custom_email(
-    email: str,
-    subject: str,
-    html_content: str,
-    text_content: str | None = None,
-    context: dict[str, Any] | None = None
+    email: str, subject: str, html_content: str, text_content: str | None = None, context: dict[str, Any] | None = None
 ) -> str | None:
     """
     Queue a custom email to be sent.
@@ -112,6 +109,6 @@ async def queue_custom_email(
         subject=subject,
         html_content=html_content,
         text_content=text_content,
-        context=context
+        context=context,
     )
     return await enqueue_email(task.model_dump())

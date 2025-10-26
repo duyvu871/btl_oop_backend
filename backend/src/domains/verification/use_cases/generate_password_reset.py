@@ -1,6 +1,7 @@
 """
 Use case: Generate and send password reset code.
 """
+
 from src.core.verification import VerificationOptions, VerificationService
 from src.workers.helpers import queue_password_reset_email
 
@@ -47,15 +48,11 @@ class GeneratePasswordResetUseCase:
                 max_attempts=3,  # Fewer attempts for security
                 length=8,  # Longer code for password reset
                 rate_limit_window_sec=300,  # 5 minutes
-                rate_limit_max=2  # Only 2 requests per 5 minutes
+                rate_limit_max=2,  # Only 2 requests per 5 minutes
             )
         )
 
         # Queue email to be sent by worker
-        job_id = await queue_password_reset_email(
-            email=email,
-            reset_token=result.code
-        )
+        job_id = await queue_password_reset_email(email=email, reset_token=result.code)
 
         return job_id
-

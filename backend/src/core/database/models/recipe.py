@@ -18,9 +18,12 @@ if TYPE_CHECKING:
 
 class Recipe(Base):
     """Recipe model representing a recipe in the system."""
+
     __tablename__ = "recipes"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False
+    )
     link: Mapped[str] = mapped_column(String, nullable=False)
     title: Mapped[str] = mapped_column(String, nullable=False)
     thumbnail: Mapped[str] = mapped_column(String, nullable=True)  # Optional image
@@ -29,8 +32,12 @@ class Recipe(Base):
     ingredientTitle: Mapped[str] = mapped_column(Text, nullable=False)  # noqa: N815
     ingredientMarkdown: Mapped[str] = mapped_column(Text, nullable=False)  # noqa: N815
     stepMarkdown: Mapped[str] = mapped_column(Text, nullable=False)  # noqa: N815
-    embedded_ingredient: Mapped[list[float]] = mapped_column(ARRAY(Float, dimensions=1), nullable=True, default=[])  # vector(3072)
-    embedded_name: Mapped[list[float]] = mapped_column(ARRAY(Float, dimensions=1), nullable=True, default=[])        # vector(3072)
+    embedded_ingredient: Mapped[list[float]] = mapped_column(
+        ARRAY(Float, dimensions=1), nullable=True, default=[]
+    )  # vector(3072)
+    embedded_name: Mapped[list[float]] = mapped_column(
+        ARRAY(Float, dimensions=1), nullable=True, default=[]
+    )  # vector(3072)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

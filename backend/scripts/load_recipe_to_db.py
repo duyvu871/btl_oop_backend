@@ -24,11 +24,13 @@ class IngredientRaw(BaseModel):
     quantitative: str | None
     unit: str | None
 
+
 class TutorialStepRaw(BaseModel):
     index: int
     title: str | None
     content: str | None
     box_gallery: list[HttpUrl] | None
+
 
 class DishRaw(BaseModel):
     link: HttpUrl
@@ -42,12 +44,14 @@ class DishRaw(BaseModel):
     ingredients: list[IngredientRaw] | None
     tutorial_step: list[TutorialStepRaw] | None
 
+
 def count_items_in_json(path: str) -> int:
     count = 0
     with open(path, "rb") as f:
         for _ in ijson.items(f, "item"):
             count += 1
     return count
+
 
 # process file json
 async def process_file(path: str):
@@ -107,6 +111,7 @@ async def process_file(path: str):
     print(f"Successfully inserted: {success_count}")
     print(f"Failed: {failed_count}")
 
+
 async def main():
     resource_url = "https://raw.githubusercontent.com/duyvu871/btl_oop_backend/main/backend/resources/recipes.qz"
     print(f"Downloading and decompressing data from {resource_url}...")
@@ -118,7 +123,7 @@ async def main():
     decompressed_data = gzip.decompress(compressed_data)
     print("Decompression complete. Saving to temporary file...")
 
-    with tempfile.NamedTemporaryFile(mode='wb', suffix='.json', delete=False) as temp_file:
+    with tempfile.NamedTemporaryFile(mode="wb", suffix=".json", delete=False) as temp_file:
         temp_file.write(decompressed_data)
         temp_path = temp_file.name
 
@@ -128,6 +133,7 @@ async def main():
     finally:
         os.unlink(temp_path)
         print("Temporary file cleaned up.")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

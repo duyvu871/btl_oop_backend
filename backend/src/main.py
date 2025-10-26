@@ -22,18 +22,17 @@ if len(settings.CORS_ORIGINS) > 0:
         allow_headers=["*"],
     )
 
+
 # Health check endpoint
 @app.get("/health", tags=["Health"])
 async def health_check():
     """Health check endpoint for monitoring"""
-    return {
-        "status": "healthy",
-        "service": "fastapi-backend",
-        "version": "1.0.0"
-    }
+    return {"status": "healthy", "service": "fastapi-backend", "version": "1.0.0"}
+
 
 # Include auth router
 app.include_router(api_router, prefix=settings.API_PREFIX)
+
 
 # Scalar UI endpoint
 @app.get("/scalar", include_in_schema=False)

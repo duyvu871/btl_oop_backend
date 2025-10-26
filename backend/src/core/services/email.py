@@ -74,9 +74,7 @@ def send_email(
         if settings.SMTP_PORT == 465:
             # Use SSL for port 465
             context = ssl.create_default_context()
-            with smtplib.SMTP_SSL(
-                settings.SMTP_HOST, settings.SMTP_PORT, context=context, timeout=30
-            ) as server:
+            with smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, context=context, timeout=30) as server:
                 server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
                 server.sendmail(settings.EMAILS_FROM_EMAIL, recipients, message.as_string())
         else:
@@ -119,7 +117,9 @@ def send_email(
         print(error_msg)
         return False
     except TimeoutError as e:
-        error_msg = f"✗ Timeout error sending email to {recipients}: SMTP server did not respond in time. Error: {str(e)}"
+        error_msg = (
+            f"✗ Timeout error sending email to {recipients}: SMTP server did not respond in time. Error: {str(e)}"
+        )
         logger.error(error_msg, exc_info=True)
         print(error_msg)
         return False

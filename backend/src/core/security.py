@@ -19,6 +19,7 @@ ph = PasswordHasher()
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
 
+
 # Utility functions
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against an Argon2 hashed password."""
@@ -28,9 +29,11 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     except (VerifyMismatchError, InvalidHashError):
         return False
 
+
 def get_password_hash(password: str) -> str:
     """Hash a password using Argon2id."""
     return ph.hash(password)
+
 
 # create JWT access token
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
@@ -42,6 +45,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
+
 
 # get current user from token
 async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> User:
@@ -59,20 +63,19 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
 
     return user
 
+
 # require verified user
 async def get_verified_user(current_user: User = Depends(get_current_user)) -> User:
     if not current_user.verified:
         raise HTTPException(status_code=403, detail="Email not verified")
     return current_user
 
+
 # require admin user
 async def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
     """Require admin role for access."""
     from src.core.database.models.user import Role
-    if current_user.role != Role.ADMIN:
-        raise HTTPException(
-            status_code=403,
-            detail="Admin privileges required"
-        )
-    return current_user
 
+    if current_user.role != Role.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin privileges required")
+    return current_user

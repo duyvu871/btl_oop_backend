@@ -1,6 +1,7 @@
 """
 Use case: Verify password reset code.
 """
+
 from src.core.verification import VerificationOptions, VerificationService
 
 
@@ -40,23 +41,14 @@ class VerifyPasswordResetCodeUseCase:
         """
         # Verify and consume code
         valid = await self.verification_service.verify_and_consume(
-            VerificationOptions(
-                namespace="password-reset",
-                subject=email
-            ),
-            code=code
+            VerificationOptions(namespace="password-reset", subject=email), code=code
         )
 
         # Get remaining attempts if use_cases failed
         remaining_attempts = None
         if not valid:
             remaining_attempts = await self.verification_service.get_remaining_attempts(
-                namespace="password-reset",
-                subject=email
+                namespace="password-reset", subject=email
             )
 
-        return {
-            "valid": valid,
-            "remaining_attempts": remaining_attempts
-        }
-
+        return {"valid": valid, "remaining_attempts": remaining_attempts}

@@ -64,7 +64,7 @@ class GenerateEmailVerificationUseCase:
                 max_attempts=5,
                 length=6,
                 rate_limit_window_sec=60,
-                rate_limit_max=3
+                rate_limit_max=3,
             )
         )
 

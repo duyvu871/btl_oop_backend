@@ -137,7 +137,7 @@ class VerificationUseCase:
 
 # FastAPI Dependency
 async def get_verification_usecase(
-    verification_service: VerificationService = Depends(get_verification_service)
+    verification_service: VerificationService = Depends(get_verification_service),
 ) -> VerificationUseCase:
     """
     FastAPI dependency to get VerificationHelper instance.

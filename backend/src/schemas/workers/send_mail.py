@@ -6,6 +6,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 class EmailType(str, Enum):
     """Types of emails that can be sent."""
+
     VERIFICATION = "verification"
     PASSWORD_RESET = "password_reset"
     CUSTOM = "custom"
@@ -13,6 +14,7 @@ class EmailType(str, Enum):
 
 class EmailTask(BaseModel):
     """Base schema for email tasks."""
+
     email_type: EmailType
     to: EmailStr
 
@@ -22,6 +24,7 @@ class EmailTask(BaseModel):
 
 class VerificationEmailTask(EmailTask):
     """Schema for use_cases email task."""
+
     email_type: EmailType = Field(default=EmailType.VERIFICATION, frozen=True)
     verification_token: str = Field(..., min_length=1)
     user_name: str | None = Field(default=None, description="User's display name")
@@ -34,6 +37,7 @@ class VerificationEmailTask(EmailTask):
 
 class PasswordResetEmailTask(EmailTask):
     """Schema for password reset email task."""
+
     email_type: EmailType = Field(default=EmailType.PASSWORD_RESET, frozen=True)
     reset_token: str = Field(..., min_length=1)
     user_name: str | None = Field(default=None, description="User's display name")
@@ -43,6 +47,7 @@ class PasswordResetEmailTask(EmailTask):
 
 class CustomEmailTask(EmailTask):
     """Schema for custom email task."""
+
     email_type: EmailType = Field(default=EmailType.CUSTOM, frozen=True)
     subject: str = Field(..., min_length=1, max_length=200)
     html_content: str = Field(..., min_length=1)

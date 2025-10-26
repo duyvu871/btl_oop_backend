@@ -27,5 +27,6 @@ async def get_db():
     async with AsyncSessionLocal() as session:
         yield session
 
+
 # Type alias for dependency injection
 DependDBSession = Annotated[AsyncSession, Depends(get_db)]
