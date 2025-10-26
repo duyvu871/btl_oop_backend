@@ -2,7 +2,7 @@
 Recipe search service using vector similarity search.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from .qdrant_store import QdrantStore
 

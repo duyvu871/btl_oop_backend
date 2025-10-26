@@ -1,7 +1,6 @@
 import asyncio
 import sys
 from pathlib import Path
-from typing import Any
 
 from qdrant_client import QdrantClient, models
 
@@ -33,7 +32,7 @@ async def main():
         )
         print("Collection Info:")
         print(f"  Name: {settings.QDRANT_RECIPE_COLLECTION}")
-        print(f"  Status: ready")
+        print("  Status: ready")
         print(f"  Points: {collection_info.points_count}")
         print()
     except Exception as e:

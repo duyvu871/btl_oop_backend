@@ -2,7 +2,6 @@
 Qdrant vector store service for managing collections and documents.
 """
 
-from typing import Optional
 
 from langchain_core.embeddings import Embeddings
 from langchain_qdrant import QdrantVectorStore
@@ -35,7 +34,7 @@ class QdrantStore:
         self.collection_name = collection_name
         self.embedding_model = embedding_model
         self.vector_size = vector_size
-        self._vector_store: Optional[QdrantVectorStore] = None
+        self._vector_store: QdrantVectorStore | None = None
 
     def ensure_collection_exists(self, recreate: bool = False):
         """
@@ -74,7 +73,7 @@ class QdrantStore:
             )
         return self._vector_store
 
-    async def add_documents(self, documents, ids: Optional[list[str]] = None):
+    async def add_documents(self, documents, ids: list[str] | None = None):
         """
         Add documents to the vector store.
 

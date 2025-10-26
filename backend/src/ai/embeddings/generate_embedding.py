@@ -49,7 +49,7 @@ class EmbeddingGenerator:
         """
         return self.embedding_model.embed_documents(texts)
 
-    async def embed_text(self, text: str) -> list[float]:
+    async def aembed_text(self, text: str) -> list[float]:
         """
         Asynchronously generate embedding for a single text.
 
@@ -61,14 +61,3 @@ class EmbeddingGenerator:
         """
         return await self.embedding_model.aembed_query(text)
 
-    async def embed_texts(self, texts: list[str]) -> list[list[float]]:
-        """
-        Asynchronously generate embeddings for multiple texts.
-
-        Args:
-            texts: List of input texts
-
-        Returns:
-            List of embedding vectors
-        """
-        return await self.embedding_model.aembed_documents(texts)
