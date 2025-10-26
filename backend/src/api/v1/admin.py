@@ -314,7 +314,7 @@ async def create_user(
     # Create user
     new_user = User(
         user_name=user_name,
-        email=user_data.email,
+        email=str(user_data.email),
         password=hashed_password,
         role=Role[user_data.role.upper()],
         verified=user_data.verified,

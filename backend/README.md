@@ -91,6 +91,8 @@ Tập trung các thành phần liên quan đến trí tuệ nhân tạo.
 - **`ai/llm/`**: Cấu hình và tương tác với các mô hình ngôn ngữ lớn (LLM).
 - **`ai/chains/`**: Xây dựng các LangChain chain để thực hiện các tác vụ phức tạp.
 
+**Lưu ý quan trọng**: Để đảm bảo tính toàn vẹn dữ liệu và sử dụng ID của PostgreSQL làm source of truth, cần load recipes vào database trước khi load embeddings vào Qdrant. Workflow nên là: 1) Insert recipes vào Postgres, 2) Sử dụng ID từ Postgres để tạo và lưu embeddings vào Qdrant.
+
 ### `alembic/`
 
 Quản lý việc thay đổi schema của database (database migrations).
@@ -124,4 +126,3 @@ Các script Python độc lập để thực hiện các tác vụ quản trị.
 - **`alembic.ini`**: File cấu hình cho Alembic, chỉ định đường dẫn đến database và thư mục chứa script migration.
 - **`Dockerfile` và `Dockerfile.dev`**: Các chỉ dẫn để build Docker image cho môi trường production và development.
 - **`docker-compose.dev.yml` và `docker-compose.prod.yml`**: Các file để định nghĩa và chạy các service của ứng dụng (API, database, Redis) bằng Docker Compose.
-

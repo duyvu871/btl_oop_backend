@@ -9,6 +9,7 @@ import gzip
 import shutil
 from pathlib import Path
 
+
 def compress_file(input_path: str, output_path: str = None):
     """
     Compress a file to gzip format.

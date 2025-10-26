@@ -1,44 +1,46 @@
 import asyncio
+import gzip
 import os
 import sys
 import tempfile
-import gzip
 from pathlib import Path
-import ijson
-import json
-from tqdm.asyncio import tqdm
+
 import httpx
+import ijson
+from tqdm.asyncio import tqdm
+
 # Add the project root to the path
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+
+from pydantic import BaseModel, HttpUrl
 
 from src.core.database.database import AsyncSessionLocal
 from src.core.database.models import Ingredient, Recipe, Step
 
-from typing import List, Optional
-from pydantic import BaseModel, HttpUrl
 
 class IngredientRaw(BaseModel):
     name: str
-    quantitative: Optional[str]
-    unit: Optional[str]
+    quantitative: str | None
+    unit: str | None
 
 class TutorialStepRaw(BaseModel):
     index: int
-    title: Optional[str]
-    content: Optional[str]
-    box_gallery: Optional[List[HttpUrl]]
+    title: str | None
+    content: str | None
+    box_gallery: list[HttpUrl] | None
 
 class DishRaw(BaseModel):
     link: HttpUrl
     title: str
-    thumbnail: Optional[HttpUrl]
-    ingredient_markdown: Optional[str]
-    step_markdown: Optional[str]
-    ingredient_title: Optional[str]
-    tutorial: Optional[str]
-    quantitative: Optional[str]
-    ingredients: Optional[List[IngredientRaw]]
-    tutorial_step: Optional[List[TutorialStepRaw]]
+    thumbnail: HttpUrl | None
+    ingredient_markdown: str | None
+    step_markdown: str | None
+    ingredient_title: str | None
+    tutorial: str | None
+    quantitative: str | None
+    ingredients: list[IngredientRaw] | None
+    tutorial_step: list[TutorialStepRaw] | None
 
 def count_items_in_json(path: str) -> int:
     count = 0
@@ -100,7 +102,7 @@ async def process_file(path: str):
                     pbar.update(1)
                 pbar.close()
             await session.commit()  # Explicit commit for the entire batch
-    print(f"\nProcessing complete!")
+    print("\nProcessing complete!")
     print(f"Total dishes: {total_items}")
     print(f"Successfully inserted: {success_count}")
     print(f"Failed: {failed_count}")

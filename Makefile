@@ -1,4 +1,4 @@
-.PHONY: help dev prod up down build rebuild logs shell db-shell redis-shell clean migrate seed load-recipes load-recipes-prod test docs
+.PHONY: help dev prod up down build rebuild logs shell db-shell redis-shell clean migrate seed load-recipes load-recipes-prod compress-resources load-vector-store test docs
 
 # Default target
 help:
@@ -33,6 +33,8 @@ help:
 	@echo "  make seed          - Seed database with initial data"
 	@echo "  make load-recipes   - Load recipes from JSON file"
 	@echo "  make load-recipes-prod - Load recipes from JSON file (production)"
+	@echo "  make compress-resources - Compress resources file to gzip"
+	@echo "  make load-vector-store   - Load recipes to vector store (Qdrant)"
 	@echo "  make test          - Run tests"
 	@echo "  make lint-fe       - Run frontend linting"
 	@echo "  make test-fe       - Run frontend tests"
@@ -182,6 +184,14 @@ load-recipes:
 # Load recipes in production from JSON file
 load-recipes-prod:
 	docker-compose -f docker-compose.prod.yml exec fastapi uv run python scripts/load_recipe_to_db.py
+
+# Compress resources file to gzip
+compress-resources:
+	docker-compose -f docker-compose.dev.yml exec fastapi uv run python scripts/compress_resources_file.py resources/recipesDB.recipes.json
+
+# Load recipes to vector store (Qdrant)
+load-vector-store:
+	docker-compose -f docker-compose.dev.yml exec fastapi uv run python scripts/load_recipe_to_vector_store.py
 
 # Run tests
 test:

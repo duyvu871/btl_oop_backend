@@ -22,7 +22,9 @@ class Settings(BaseSettings):
 
     # Qdrant settings
     QDRANT_URL: str = "http://localhost:6333"
-
+    QDRANT_RECIPE_COLLECTION: str = "recipes"
+    QDRANT_PERSONAL_COLLECTION: str = "personal_recommendation"
+    
     # JWT settings
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
@@ -36,7 +38,6 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str | None = None
     EMAILS_FROM_EMAIL: str | None = None
     EMAILS_FROM_NAME: str | None = None
-    FRONTEND_URL: str = "http://localhost:3000"  # Frontend URL for creating links
 
     # ARQ Worker settings
     ARQ_QUEUE_NAME: str = "arq:queue"
