@@ -11,7 +11,7 @@ from src.settings.env import settings
 engine = create_async_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,  # Check connection before using
-    echo=True,  # Display SQL commands in log (for debugging purposes)
+    echo=False,  # Display SQL commands in log (for debugging purposes)
 )
 
 # Create SessionLocal for each request
