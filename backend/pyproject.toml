@@ -11,6 +11,8 @@ dependencies = [
     "uvicorn",
     "gunicorn",
     "langchain",
+    "openai",
+    "langchain-qdrant",
     "qdrant-client",
     "psycopg[binary]",
     "asyncpg",
