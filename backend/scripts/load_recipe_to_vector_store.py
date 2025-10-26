@@ -44,7 +44,7 @@ async def main():
             offset += batch_size
 
         # Initialize services using the new classes
-        embedding_generator = EmbeddingGenerator(model_name="bkai-foundation-models/vietnamese-bi-encoder")
+        embedding_generator = EmbeddingGenerator()
         qdrant_client = QdrantClient(url=settings.QDRANT_URL)
         qdrant_store = QdrantStore(
             client=qdrant_client,

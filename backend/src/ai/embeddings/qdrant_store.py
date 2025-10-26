@@ -97,7 +97,7 @@ class QdrantStore:
             List of similar documents
         """
         vector_store = self.get_vector_store()
-        return await vector_store.asimilarity_search(query=query, k=k, **kwargs)
+        return await vector_store.asimilarity_search_with_score(query=query, k=k, **kwargs)
 
     def delete_collection(self):
         """

@@ -2,9 +2,24 @@
 Recipe search service using vector similarity search.
 """
 
+from dataclasses import dataclass
 from typing import Any
 
 from .qdrant_store import QdrantStore
+
+
+@dataclass
+class RecipeSearchResult:
+    """
+    Dataclass for recipe search results.
+    """
+    title: str
+    id: str
+    content: str
+    similarity_score: float
+    raw_score: float
+    source: str
+    metadata: dict[str, Any]
 
 
 class RecipeSearch:
@@ -27,7 +42,7 @@ class RecipeSearch:
         top_k: int = 5,
         score_threshold: float = 0.0,
         **kwargs
-    ) -> list[dict[str, Any]]:
+    ) -> list[RecipeSearchResult]:
         """
         Search for similar recipes based on the query text.
 
@@ -38,7 +53,7 @@ class RecipeSearch:
             **kwargs: Additional search parameters
 
         Returns:
-            List of dictionaries containing recipe information and similarity scores
+            List of RecipeSearchResult objects
         """
         # Perform similarity search
         docs = await self.qdrant_store.search_similar(
@@ -50,19 +65,22 @@ class RecipeSearch:
 
         # Format results
         results = []
-        for doc in docs:
-            result = {
-                "title": doc.metadata.get("title", ""),
-                "id": doc.metadata.get("id", ""),
-                "content": doc.page_content,
-                "score": getattr(doc, 'score', None),  # If available
-                "metadata": doc.metadata
-            }
+        for doc, score in docs:
+            similarity_percentage = max(0, min(100, (score + 1) * 50))
+            result = RecipeSearchResult(
+                title=doc.metadata.get("title", ""),
+                id=doc.metadata.get("id", ""),
+                content=doc.page_content,
+                similarity_score=round(similarity_percentage, 2),
+                raw_score=round(score, 4),
+                source=doc.metadata.get("source", ""),
+                metadata=doc.metadata
+            )
             results.append(result)
 
         return results
 
-    async def search_by_ingredients(self, ingredients: list[str], top_k: int = 5) -> list[dict[str, Any]]:
+    async def search_by_ingredients(self, ingredients: list[str], top_k: int = 5) -> list[RecipeSearchResult]:
         """
         Search recipes by ingredients.
 
@@ -71,13 +89,13 @@ class RecipeSearch:
             top_k: Number of top results to return
 
         Returns:
-            List of recipe dictionaries
+            List of RecipeSearchResult objects
         """
         # Combine ingredients into a query string
         query = " ".join(ingredients)
         return await self.search_similar_recipes(query=query, top_k=top_k)
 
-    async def search_by_title(self, title: str, top_k: int = 5) -> list[dict[str, Any]]:
+    async def search_by_title(self, title: str, top_k: int = 5) -> list[RecipeSearchResult]:
         """
         Search recipes by title.
 
@@ -86,6 +104,6 @@ class RecipeSearch:
             top_k: Number of top results to return
 
         Returns:
-            List of recipe dictionaries
+            List of RecipeSearchResult objects
         """
         return await self.search_similar_recipes(query=title, top_k=top_k)

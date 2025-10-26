@@ -41,7 +41,7 @@ async def main():
 
     # Example queries to test
     test_queries = [
-        "Cách làm",
+        "Tôi có thịt bò và rau cải, làm món gì ngon?",
     ]
 
     print("Testing Similarity Search:")
@@ -66,7 +66,7 @@ async def main():
             query=query,
             top_k=10,
             score_threshold=0.1,  # Only show results with >10% similarity
-            filter=langchain_filter
+            # filter=langchain_filter
         )
 
         if not results:
@@ -74,11 +74,11 @@ async def main():
             continue
 
         for i, result in enumerate(results, 1):
-            print(f"{i}. 📖 {result['title']}")
-            print(f"   Similarity: {result.get('score', 'N/A')}%")
-            print(f"   Recipe ID: {result['id']}")
-            print(f"   Preview: {result['content'][:200]}..." if len(result['content']) > 200 else result['content'])
-            print(f"   Type: {result['metadata'].get('type', 'N/A')}")
+            print(f"{i}. 📖 {result.title}")
+            print(f"   Similarity: {result.similarity_score}%")
+            print(f"   Recipe ID: {result.id}")
+            print(f"   Preview: {result.content[:200]}..." if len(result.content) > 200 else result['content'])
+            print(f"   Type: {result.metadata.get('type', 'N/A')}")
             print()
 
     print("\n✅ Similarity search testing complete!")

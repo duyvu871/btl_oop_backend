@@ -1,28 +1,26 @@
 """
-Embedding generation service using HuggingFace models.
+Embedding generation service using Google AI models.
 """
 
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings.vertexai import VertexAIEmbeddings
 
 
 class EmbeddingGenerator:
     """
-    Service for generating embeddings from text using HuggingFace models.
+    Service for generating embeddings from text using Google AI models.
     """
 
-    def __init__(self, model_name: str = "keepitreal/vietnamese-sbert", device: str = "cpu", normalize_embeddings: bool = False):
+    def __init__(self, model_name: str = "text-embedding-004", api_key: str = None):
         """
         Initialize the embedding generator.
 
         Args:
-            model_name: Name of the HuggingFace model to use
-            device: Device to run the model on ('cpu' or 'cuda')
-            normalize_embeddings: Whether to normalize embeddings
+            model_name: Name of the Google AI embedding model to use
+            api_key: Google AI API key (if not set in environment)
         """
-        self.embedding_model = HuggingFaceEmbeddings(
+        self.embedding_model = VertexAIEmbeddings(
             model_name=model_name,
-            model_kwargs={"device": device},
-            encode_kwargs={'normalize_embeddings': normalize_embeddings}
+            api_key=api_key
         )
 
     def embed_text(self, text: str) -> list[float]:
@@ -61,3 +59,14 @@ class EmbeddingGenerator:
         """
         return await self.embedding_model.aembed_query(text)
 
+    async def aembed_texts(self, texts: list[str]) -> list[list[float]]:
+        """
+        Asynchronously generate embeddings for multiple texts.
+
+        Args:
+            texts: List of input texts
+
+        Returns:
+            List of embedding vectors
+        """
+        return await self.embedding_model.aembed_documents(texts)
