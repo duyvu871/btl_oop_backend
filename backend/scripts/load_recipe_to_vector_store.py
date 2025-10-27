@@ -3,9 +3,8 @@ import sys
 import uuid
 from asyncio import sleep
 from pathlib import Path
-import tiktoken
-import tiktoken
 
+import tiktoken
 from langchain_core.documents import Document
 from langchain_text_splitters.markdown import MarkdownHeaderTextSplitter
 from qdrant_client import QdrantClient
