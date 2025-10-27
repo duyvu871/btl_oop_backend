@@ -17,8 +17,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import func, select
 
-from src.ai.embeddings.generate_embedding import EmbeddingGenerator
+from src.ai.embeddings.generate_embedding import GoogleEmbeddingGenerator, OpenAIEmbeddingGenerator, EmbeddingGenerator
 from src.ai.embeddings.qdrant_store import QdrantStore
+from src.ai.embeddings.token_calculator import TokenCalculator
 from src.core.database.database import AsyncSessionLocal
 from src.core.database.models import Recipe
 from src.settings.env import settings

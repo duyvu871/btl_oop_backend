@@ -45,16 +45,11 @@ RUN apt-get update && apt-get install -y \
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-## Copy the virtual environment from builder stage
-#COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
-#
-## Copy application code
-#COPY --from=builder --chown=appuser:appuser /app/src /app/src
-
-COPY --from=builder --chown=appuser:appuser /app /app
-
-# Create non-root user
+# Create non-root user BEFORE copying files
 RUN useradd -m -u 1000 appuser
+
+# Copy app from builder with correct ownership
+COPY --from=builder --chown=appuser:appuser /app /app
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
