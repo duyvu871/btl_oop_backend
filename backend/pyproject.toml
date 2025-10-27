@@ -16,7 +16,7 @@ dependencies = [
     "langchain-google-genai",
     "langchain-google-vertexai",
     "langchain-text-splitters",
-    "langchain-qdrant",ss
+    "langchain-qdrant",
     "openai",
     "qdrant-client",
     "psycopg[binary]",

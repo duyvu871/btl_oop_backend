@@ -2,7 +2,7 @@
 Embedding generation service using Google AI models.
 """
 
-from langchain_community.embeddings.vertexai import VertexAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 
 class EmbeddingGenerator:
@@ -18,9 +18,9 @@ class EmbeddingGenerator:
             model_name: Name of the Google AI embedding model to use
             api_key: Google AI API key (if not set in environment)
         """
-        self.embedding_model = VertexAIEmbeddings(
-            model_name=model_name,
-            api_key=api_key
+        self.embedding_model = GoogleGenerativeAIEmbeddings(
+            model=model_name,
+            google_api_key=api_key
         )
 
     def embed_text(self, text: str) -> list[float]:
