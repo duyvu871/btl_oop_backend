@@ -46,7 +46,7 @@ async def main():
             offset += batch_size
 
         # Initialize services using the new classes
-        embedding_generator = EmbeddingGenerator(model_name="gemini-embedding-001", api_key=settings.GOOGLE_API_KEY)
+        embedding_generator = EmbeddingGenerator(model_name="text-embedding-3-large", api_key=settings.OPENAI_API_KEY)
         qdrant_client = QdrantClient(url=settings.QDRANT_URL)
         qdrant_store = QdrantStore(
             client=qdrant_client,
@@ -113,7 +113,7 @@ async def main():
         print(f"Total tokens to embed: {total_tokens}")
 
         # Add all documents to vector store in batches
-        batch_size_vector = 1
+        batch_size_vector = 500
         num_batches = (len(all_chunks) + batch_size_vector - 1) // batch_size_vector
         add_pbar = tqdm(total=num_batches, desc="Adding to vector store", unit="batch")
         for i in range(0, len(all_chunks), batch_size_vector):
@@ -123,7 +123,7 @@ async def main():
                 documents=batch_chunks,
                 ids=batch_ids
             )
-            await sleep(60 / 95) # wait to limit to 95 requests per minute
+            await sleep(0.01) # wait to limit to 95 requests per minute
             add_pbar.update(1)
         add_pbar.close()
 
