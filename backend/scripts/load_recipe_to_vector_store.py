@@ -1,7 +1,10 @@
 import asyncio
 import sys
 import uuid
+from asyncio import sleep
 from pathlib import Path
+import tiktoken
+import tiktoken
 
 from langchain_core.documents import Document
 from langchain_text_splitters.markdown import MarkdownHeaderTextSplitter
@@ -44,13 +47,13 @@ async def main():
             offset += batch_size
 
         # Initialize services using the new classes
-        embedding_generator = EmbeddingGenerator()
+        embedding_generator = EmbeddingGenerator(model_name="gemini-embedding-001", api_key=settings.GOOGLE_API_KEY)
         qdrant_client = QdrantClient(url=settings.QDRANT_URL)
         qdrant_store = QdrantStore(
             client=qdrant_client,
             collection_name=settings.QDRANT_RECIPE_COLLECTION,
             embedding_model=embedding_generator.embedding_model,
-            vector_size=768,
+            vector_size=3072,
         )
         qdrant_store.ensure_collection_exists(recreate=True)  # Recreate collection
 
@@ -105,8 +108,13 @@ async def main():
             pbar.update(1)
         pbar.close()
 
+        # Calculate total tokens
+        enc = tiktoken.get_encoding("cl100k_base")
+        total_tokens = sum(len(enc.encode(chunk.page_content)) for chunk in all_chunks)
+        print(f"Total tokens to embed: {total_tokens}")
+
         # Add all documents to vector store in batches
-        batch_size_vector = 500
+        batch_size_vector = 1
         num_batches = (len(all_chunks) + batch_size_vector - 1) // batch_size_vector
         add_pbar = tqdm(total=num_batches, desc="Adding to vector store", unit="batch")
         for i in range(0, len(all_chunks), batch_size_vector):
@@ -116,6 +124,7 @@ async def main():
                 documents=batch_chunks,
                 ids=batch_ids
             )
+            await sleep(60 / 95) # wait to limit to 95 requests per minute
             add_pbar.update(1)
         add_pbar.close()
 

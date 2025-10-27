@@ -42,6 +42,9 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
 # Copy the virtual environment from builder stage
 COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
 
