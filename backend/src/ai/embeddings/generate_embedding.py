@@ -201,4 +201,4 @@ class OpenAIEmbeddingGenerator(BaseEmbeddingGenerator):
 
 
 # Backward compatibility alias
-EmbeddingGenerator = OpenAIEmbeddingGenerator
+EmbeddingGenerator = GoogleEmbeddingGenerator
