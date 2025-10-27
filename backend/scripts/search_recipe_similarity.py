@@ -16,7 +16,7 @@ from src.settings.env import settings
 async def main():
     """Main function to demonstrate similarity search."""
     # Initialize services using the new classes
-    embedding_generator = EmbeddingGenerator("gemini-embedding-001")
+    embedding_generator = EmbeddingGenerator(model_name="gemini-embedding-001", api_key=settings.GOOGLE_API_KEY)
     qdrant_client = QdrantClient(url=settings.QDRANT_URL)
     qdrant_store = QdrantStore(
         client=qdrant_client,

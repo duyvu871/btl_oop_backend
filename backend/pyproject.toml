@@ -79,6 +79,7 @@ line-length = 120
 # TCH = flake8-type-checking (xử lý lỗi import kiểu)
 select = ["E", "W", "F", "I", "N", "UP", "TCH"]
 ignore = [
+    "F841",  # biến không được sử dụng
     "E501",  # dòng quá dài
     "N802",  # hàm không tuân theo quy tắc đặt tên
     "N815",  # mixedCase variable in class scope (cho các trường DB có sẵn)

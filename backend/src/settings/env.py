@@ -21,6 +21,7 @@ class Settings(BaseSettings):
 
     # Open AI settings
     OPENAI_API_KEY: str
+    GOOGLE_API_KEY: str
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     COMPLETION_MODEL: str = "gpt-3.5-turbo"
     RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
