@@ -245,7 +245,7 @@ jobs:
             docker compose -f docker-compose.prod.yml restart
             
             echo "👑 Seeding initial superuser"
-            docker compose -f docker-compose.prod.yml run --rm --memory=1g fastapi uv run python scripts/seed_admin.py
+            docker compose -f docker-compose.prod.yml exec fastapi uv run python scripts/seed_admin.py
             
             echo "⏳ Waiting for services to start..."
             sleep 15

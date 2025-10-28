@@ -50,11 +50,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: 2G
+          cpus: '4'
+          memory: 4G
         reservations:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '1'
+          memory: 1G
 
   worker_send_mail:
     image: ${IMAGE_SHA:-adc300/btl_oop:latest}
