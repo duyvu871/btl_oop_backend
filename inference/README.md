@@ -129,10 +129,33 @@ python main.py
 
 Server sẽ chạy tại `http://localhost:8000`
 
-### 2. Production
+Hoặc sử dụng uvicorn trực tiếp với auto-reload:
 
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### 2. Production
+
+**Với Gunicorn + Uvicorn workers**:
+
+```bash
+gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
+```
+
+Tham số:
+- `-w 4`: 4 worker processes (tùy chỉnh theo CPU cores)
+- `-k uvicorn.workers.UvicornWorker`: Sử dụng uvicorn worker class
+- `-b 0.0.0.0:8000`: Bind tới port 8000
+
+**Tối ưu hóa cho GPU**:
+
+```bash
+# Số workers = số GPU
+gunicorn main:app -w 1 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 \
+  --timeout 120 \
+  --access-logfile - \
+  --error-logfile -
 ```
 
 ### 3. Với Docker
@@ -143,6 +166,40 @@ docker-compose -f docker-compose.dev.yml up
 
 # Production
 docker-compose -f docker-compose.prod.yml up
+```
+
+## ⚙️ Gunicorn Configuration
+
+### Worker Types
+
+- **sync**: Default, phù hợp cho I/O-bound (HTTP requests)
+- **uvicorn.workers.UvicornWorker**: **Khuyến nghị** cho FastAPI (async/await support)
+- **gevent**: Async framework (yêu cầu `gevent` package)
+- **tornado**: Async framework (yêu cầu `tornado` package)
+
+### Tính toán số Workers
+
+```python
+# Formula: (2 × CPU cores) + 1
+# Ví dụ: 4 CPU cores → (2 × 4) + 1 = 9 workers
+
+# Cho GPU inference:
+# Workers = số GPU (vì mỗi worker chiếm 1 GPU)
+```
+
+### Cấu hình Advanced
+
+```bash
+gunicorn main:app \
+  -w 4 \
+  -k uvicorn.workers.UvicornWorker \
+  -b 0.0.0.0:8000 \
+  --timeout 120 \                    # Timeout 120s (cho model loading)
+  --access-logfile - \               # Log to stdout
+  --error-logfile - \                # Error log to stdout
+  --log-level debug \                # Log level
+  --max-requests 1000 \              # Restart worker sau 1000 requests
+  --max-requests-jitter 100          # Random jitter để tránh restart cùng lúc
 ```
 
 ## 📚 API Endpoints
@@ -408,93 +465,141 @@ python main.py
 
 ### Dockerfile (Production)
 
-File `Dockerfile` được tối ưu hóa cho production:
+File `Dockerfile` được tối ưu hóa cho production với best practices:
 
 ```dockerfile
-# Multi-stage build
 FROM python:3.11-slim as builder
+
+# Install system dependencies for building
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
+    git \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Set environment variables to avoid CUDA downloads
+ENV CUDA_VISIBLE_DEVICES=""
+ENV TORCH_USE_CUDA_DSA=0
+ENV PYTORCH_NO_CUDA=1
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install uv
-RUN pip install uv
-
 # Copy dependency files
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock README.md ./
 
-# Install Python dependencies
-RUN uv sync --no-dev
+# Install dependencies into a virtual environment
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --no-install-project --no-dev --link-mode=copy
+
+# Copy the application code
+COPY . .
+
+# Install the project itself
+RUN uv sync --no-dev --link-mode=copy
 
 # Production stage
 FROM python:3.11-slim
 
-WORKDIR /app
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install only runtime system dependencies
+RUN apt-get update && apt-get install -y \
     libopenblas0 \
     libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
+    curl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy installed packages from builder
-COPY --from=builder /app/.venv ./.venv
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Copy application code
-COPY main.py ./
+# Create non-root user BEFORE copying files
+RUN useradd -m -u 1000 appuser
 
-# Set environment
-ENV PATH="/app/.venv/bin:$PATH"
-ENV PYTHONUNBUFFERED=1
+# Copy app from builder with correct ownership
+COPY --from=builder --chown=appuser:appuser /app /app
 
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH="/app/.venv/bin:$PATH"
+
+WORKDIR /app
+
+USER appuser
+
+# Expose port
 EXPOSE 8000
 
-CMD ["python", "main.py"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Start application with gunicorn
+CMD ["gunicorn", "main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000"]
 ```
 
 **Tính năng**:
-- Multi-stage build: Giảm size image
-- Slim base image: Nhẹ và bảo mật
-- Non-root user (khuyến nghị): Thêm vào cho production
+- **Multi-stage build**: Giảm size image, tách builder và production
+- **Build cache mounting**: Sử dụng `--mount=type=cache` để tăng tốc build
+- **uv sync**: Cài đặt dependencies từ pyproject.toml và uv.lock
+- **Health check**: Tự động kiểm tra `/health` endpoint
+- **Gunicorn**: Production-grade WSGI server với 4 workers
+- **Uvicorn worker**: Gunicorn sử dụng uvicorn worker để chạy FastAPI
+- **CUDA runtime**: Hỗ trợ GPU inference với CUDA 12.1 + cuDNN
 
 ### Dockerfile.dev (Development)
 
-File `Dockerfile.dev` cho development:
+File `Dockerfile.dev` cho development với auto-reload:
 
 ```dockerfile
-FROM python:3.11
+FROM python:3.11-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    curl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+# Copy dependency files
+COPY pyproject.toml uv.lock README.md ./
 
-RUN pip install uv
+# Install dependencies
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --link-mode=copy
 
-COPY pyproject.toml uv.lock ./
-
-RUN uv sync
-
+# Copy the application code
 COPY . .
 
-ENV PYTHONUNBUFFERED=1
+# Set environment
+ENV PATH="/app/.venv/bin:$PATH"
 
+# Expose port
 EXPOSE 8000
 
+# Run the application with auto-reload
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 ```
 
 **Tính năng**:
-- Auto-reload: Phát hiện thay đổi code
-- Hot reload: Tiện cho development
-- Full development tools
+- **Auto-reload**: Phát hiện thay đổi code tự động
+- **Single-stage**: Đơn giản cho development
+- **Build cache**: Tối ưu build time
+- **Hot reload**: Tiện khi develop
 
 ### Build Images
 
@@ -701,49 +806,6 @@ docker push username/bkai-embedding:0.1.0
 
 # Pull
 docker pull username/bkai-embedding:latest
-```
-
-### Kubernetes Deployment (Optional)
-
-Nếu sử dụng Kubernetes:
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: embedding-server
-spec:
-  containers:
-  - name: embedding
-    image: bkai-embedding:latest
-    ports:
-    - containerPort: 8000
-    env:
-    - name: DEVICE
-      value: "cuda"
-    - name: API_KEY
-      valueFrom:
-        secretKeyRef:
-          name: api-secrets
-          key: embedding-key
-    resources:
-      limits:
-        nvidia.com/gpu: 1
-        memory: "16Gi"
-      requests:
-        memory: "8Gi"
-    livenessProbe:
-      httpGet:
-        path: /health
-        port: 8000
-      initialDelaySeconds: 60
-      periodSeconds: 30
-    readinessProbe:
-      httpGet:
-        path: /health
-        port: 8000
-      initialDelaySeconds: 20
-      periodSeconds: 10
 ```
 
 ## 🤝 Đóng Góp
