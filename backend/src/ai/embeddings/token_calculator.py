@@ -21,6 +21,14 @@ class TokenCalculator:
         # Google models (approximate pricing)
         "text-embedding-004": 0.025,  # $0.025 per 1M tokens (estimated)
         "embedding-001": 0.025,  # $0.025 per 1M tokens (estimated)
+
+        # Cohere models
+        "embed-english-v3.0": 0.10,  # $0.10 per 1M tokens
+        "embed-multilingual-v3.0": 0.10,  # $0.10 per 1M tokens
+        "embed-english-light-v3.0": 0.10,  # $0.10 per 1M tokens
+        "embed-multilingual-light-v3.0": 0.10,  # $0.10 per 1M tokens
+        "embed-english-v2.0": 0.10,  # $0.10 per 1M tokens (legacy)
+        "embed-multilingual-v2.0": 0.10,  # $0.10 per 1M tokens (legacy)
     }
 
     def __init__(self, model_name: str = "text-embedding-3-small"):

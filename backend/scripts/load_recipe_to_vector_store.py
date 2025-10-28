@@ -1,10 +1,8 @@
 import asyncio
 import sys
 import uuid
-from asyncio import sleep
 from pathlib import Path
 
-import tiktoken
 from langchain_core.documents import Document
 from langchain_text_splitters.markdown import MarkdownHeaderTextSplitter
 from qdrant_client import QdrantClient
@@ -19,6 +17,8 @@ from sqlalchemy import func, select
 
 from src.ai.embeddings.generate_embedding import EmbeddingGenerator
 from src.ai.embeddings.qdrant_store import QdrantStore
+from src.ai.embeddings.rate_limiter import BatchRateLimiter
+from src.ai.embeddings.token_calculator import TokenCalculator
 from src.core.database.database import AsyncSessionLocal
 from src.core.database.models import Recipe
 from src.settings.env import settings
@@ -46,15 +46,22 @@ async def main():
             offset += batch_size
 
         # Initialize services using the new classes
-        embedding_generator = EmbeddingGenerator(model_name="text-embedding-3-large", api_key=settings.OPENAI_API_KEY)
+        embedding_generator = EmbeddingGenerator(
+            model_name="text-embedding-004",
+            api_key=settings.GOOGLE_API_KEY,
+        )
         qdrant_client = QdrantClient(url=settings.QDRANT_URL)
         qdrant_store = QdrantStore(
             client=qdrant_client,
             collection_name=settings.QDRANT_RECIPE_COLLECTION,
             embedding_model=embedding_generator.embedding_model,
-            vector_size=3072,
+            vector_size=768,
         )
         qdrant_store.ensure_collection_exists(recreate=True)  # Recreate collection
+
+        # Initialize rate limiter for 95 requests per minute
+        rate_limiter = BatchRateLimiter(max_requests_per_minute=50)
+        print(f"\n⚙️  Rate limiter configured: {rate_limiter.max_requests_per_minute} RPM")
 
         # Initialize splitter
         splitter = MarkdownHeaderTextSplitter(headers_to_split_on=[
@@ -107,25 +114,80 @@ async def main():
             pbar.update(1)
         pbar.close()
 
-        # Calculate total tokens
-        enc = tiktoken.get_encoding("cl100k_base")
-        total_tokens = sum(len(enc.encode(chunk.page_content)) for chunk in all_chunks)
-        print(f"Total tokens to embed: {total_tokens}")
+        # Calculate total tokens and cost using TokenCalculator
+        print("\n" + "=" * 70)
+        print("📊 TOKEN & COST ANALYSIS")
+        print("=" * 70)
 
-        # Add all documents to vector store in batches
-        batch_size_vector = 500
+        model_name = "embed-v4.0"  # Change to match your embedding model
+        token_calculator = TokenCalculator(model_name=model_name)
+
+        # Get all page contents for token calculation
+        all_contents = [chunk.page_content for chunk in all_chunks]
+        summary = token_calculator.get_summary(all_contents)
+
+        print(f"Model: {summary['model_name']}")
+        print(f"Number of chunks: {summary['num_texts']:,}")
+        print(f"Total tokens: {summary['total_tokens']:,}")
+        print(f"Average tokens per chunk: {summary['avg_tokens_per_text']:.2f}")
+        print(f"Estimated cost: ${summary['estimated_cost_usd']:.4f}")
+        print("=" * 70 + "\n")
+
+        # Calculate optimal batch size and processing time
+        batch_size_vector = 100  # Items per batch
         num_batches = (len(all_chunks) + batch_size_vector - 1) // batch_size_vector
+
+        # Get processing estimate
+        estimate = rate_limiter.get_processing_estimate(num_batches)
+        print("=" * 70)
+        print("⏱️  PROCESSING TIME ESTIMATE")
+        print("=" * 70)
+        print(f"Total chunks: {len(all_chunks):,}")
+        print(f"Batch size: {batch_size_vector}")
+        print(f"Total batches: {estimate.total_batches}")
+        print(f"Max RPM: {estimate.max_requests_per_minute}")
+        print(f"Estimated time: {estimate.estimated_minutes:.2f} minutes ({estimate.estimated_seconds:.2f} seconds)")
+        print("=" * 70 + "\n")
+
+        # Add all documents to vector store in batches with rate limiting
+        print("🚀 Starting batch processing with rate limiting...")
         add_pbar = tqdm(total=num_batches, desc="Adding to vector store", unit="batch")
+
         for i in range(0, len(all_chunks), batch_size_vector):
+            # Wait for rate limiter before making request (controls RPM)
+            await rate_limiter.acquire()
+
             batch_chunks = all_chunks[i:i + batch_size_vector]
             batch_ids = all_ids[i:i + batch_size_vector]
+
             await qdrant_store.add_documents(
                 documents=batch_chunks,
                 ids=batch_ids
             )
-            await sleep(0.01) # wait to limit to 95 requests per minute
+
             add_pbar.update(1)
+
+            # Show stats every 10 batches
+            if (i // batch_size_vector + 1) % 10 == 0:
+                stats = rate_limiter.get_stats()
+                add_pbar.set_postfix({
+                    'rpm': f"{stats.current_rpm}",
+                    'elapsed': f"{stats.elapsed_seconds}s"
+                })
+
         add_pbar.close()
+
+        # Final statistics
+        final_stats = rate_limiter.get_stats()
+        print("\n" + "=" * 70)
+        print("✅ PROCESSING COMPLETE")
+        print("=" * 70)
+        print(f"Total batches processed: {final_stats.processed_count}")
+        print(f"Total time elapsed: {final_stats.elapsed_seconds} seconds")
+        print(f"Average RPM: {final_stats.current_rpm}")
+        print(f"Total chunks embedded: {len(all_chunks):,}")
+        print("=" * 70 + "\n")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

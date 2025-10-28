@@ -7,6 +7,7 @@ from langchain_core.embeddings import Embeddings
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
+from qdrant_client.models import PointStruct
 
 
 class QdrantStore:
@@ -83,6 +84,49 @@ class QdrantStore:
         """
         vector_store = self.get_vector_store()
         await vector_store.aadd_documents(documents=documents, ids=ids)
+
+    async def add_documents_with_embeddings(
+        self,
+        documents,
+        embeddings: list[list[float]],
+        ids: list[str] | None = None
+    ):
+        """
+        Add documents with pre-computed embeddings to the vector store.
+        This bypasses LangChain's embedding generation, allowing external rate limiting.
+
+        Args:
+            documents: List of Document objects
+            embeddings: Pre-computed embeddings for the documents
+            ids: Optional list of IDs for the documents
+        """
+
+        if len(documents) != len(embeddings):
+            raise ValueError("Number of documents must match number of embeddings")
+
+        # Generate IDs if not provided
+        if ids is None:
+            import uuid
+            ids = [str(uuid.uuid4()) for _ in documents]
+
+        # Create points with embeddings
+        points = []
+        for i, (doc, embedding, point_id) in enumerate(zip(documents, embeddings, ids)):
+            point = PointStruct(
+                id=point_id,
+                vector=embedding,
+                payload={
+                    "page_content": doc.page_content,
+                    "metadata": doc.metadata,
+                }
+            )
+            points.append(point)
+
+        # Upload to Qdrant
+        self.client.upsert(
+            collection_name=self.collection_name,
+            points=points
+        )
 
     async def search_similar(self, query: str, k: int = 5, **kwargs):
         """
