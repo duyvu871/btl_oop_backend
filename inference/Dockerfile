@@ -25,6 +25,8 @@ COPY pyproject.toml uv.lock README.md ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --no-dev --link-mode=copy
 
+COPY . .
+
 # Production stage
 FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
 
