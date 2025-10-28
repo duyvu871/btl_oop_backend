@@ -1,0 +1,32 @@
+[project]
+name = "bkai-embedding-server"
+version = "0.1.0"
+description = "OpenAI-compatible embeddings server (FastAPI) using bkai-foundation-models/vietnamese-bi-encoder"
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "sentence-transformers>=3.0.0",
+  "transformers>=4.44.0",
+  "tokenizers>=0.19.0",
+  "numpy>=1.26",
+  "accelerate>=0.33",
+  "scalar-fastapi>=0.0.100",
+]
+
+[project.optional-dependencies]
+cpu = [
+  "torch==2.4.*",
+  "torchvision==0.19.*",
+  "torchaudio==2.4.*",
+]
+
+[project.scripts]
+embed-serve = "uvicorn:main"
+# uvicorn:main = uvicorn.main:main (entrypoint mặc định của uvicorn)
+
+[tool.uv]
+
+[tool.uv.sources]

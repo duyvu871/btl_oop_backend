@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  embeddings:
+    build: inference
+    container_name: embeddings-bkai
+    env_file:
+      - .env.inference
+    environment:
+      MODEL_ID: bkai-foundation-models/vietnamese-bi-encoder
+      DEVICE: cuda
+      BATCH_SIZE: "32"
+      NORMALIZE: "1"
+      MAX_LENGTH: "256"
+      API_KEY: ${API_KEY}
+
+      # Hugging Face cache (tăng tốc các lần chạy sau)
+      HF_HOME: /root/.cache/huggingface
+
+      # (Tùy chọn) nếu model/repo yêu cầu token
+      # HF_TOKEN: ${HF_TOKEN}
+
+    ports:
+      - "8000:8000"
+
+    # Bật GPU cho container
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: ["gpu"]
+
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+
+    # healthcheck đơn giản
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/health | grep -q '\"ok\": true' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 24
+      start_period: 30s
+
+volumes:
+  hf_cache:
