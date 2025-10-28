@@ -7,7 +7,7 @@ from qdrant_client import QdrantClient, models
 # Add the project root to the path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.ai.embeddings.generate_embedding import EmbeddingGenerator, APIEmbeddingGenerator
+from src.ai.embeddings.generate_embedding import APIEmbeddingGenerator
 from src.ai.embeddings.qdrant_store import QdrantStore
 from src.ai.embeddings.search import RecipeSearch
 from src.settings.env import settings
