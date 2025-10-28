@@ -8,10 +8,10 @@ services:
       - .env.inference
     environment:
       MODEL_ID: bkai-foundation-models/vietnamese-bi-encoder
-      DEVICE: cuda
-      BATCH_SIZE: "32"
-      NORMALIZE: "1"
-      MAX_LENGTH: "256"
+      DEVICE: ${DEVICE:-cuda}
+      BATCH_SIZE: ${BATCH_SIZE:-16}
+      NORMALIZE: ${NORMALIZE:-1}
+      MAX_LENGTH: ${MAX_LENGTH:-256}
       API_KEY: ${API_KEY}
 
       # Hugging Face cache (tăng tốc các lần chạy sau)
