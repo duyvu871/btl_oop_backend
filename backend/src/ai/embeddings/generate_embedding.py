@@ -2,69 +2,12 @@
 Embedding generation service using Google AI, OpenAI, and Cohere models.
 """
 
-from abc import ABC, abstractmethod
-
-from langchain_cohere import CohereEmbeddings
+from httpx import AsyncClient
+from langchain_core.embeddings import Embeddings
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_openai import OpenAIEmbeddings
 
-
-class BaseEmbeddingGenerator(ABC):
-    """
-    Abstract base class for embedding generators.
-    """
-
-    @abstractmethod
-    def embed_text(self, text: str) -> list[float]:
-        """
-        Generate embedding for a single text.
-
-        Args:
-            text: Input text
-
-        Returns:
-            Embedding vector
-        """
-        pass
-
-    @abstractmethod
-    def embed_texts(self, texts: list[str]) -> list[list[float]]:
-        """
-        Generate embeddings for multiple texts.
-
-        Args:
-            texts: List of input texts
-
-        Returns:
-            List of embedding vectors
-        """
-        pass
-
-    @abstractmethod
-    async def aembed_text(self, text: str) -> list[float]:
-        """
-        Asynchronously generate embedding for a single text.
-
-        Args:
-            text: Input text
-
-        Returns:
-            Embedding vector
-        """
-        pass
-
-    @abstractmethod
-    async def aembed_texts(self, texts: list[str]) -> list[list[float]]:
-        """
-        Asynchronously generate embeddings for multiple texts.
-
-        Args:
-            texts: List of input texts
-
-        Returns:
-            List of embedding vectors
-        """
-        pass
+BaseEmbeddingGenerator = Embeddings
 
 
 class GoogleEmbeddingGenerator(BaseEmbeddingGenerator):
@@ -85,48 +28,48 @@ class GoogleEmbeddingGenerator(BaseEmbeddingGenerator):
             google_api_key=api_key
         )
 
-    def embed_text(self, text: str) -> list[float]:
+    def embed_query(self, text: str) -> list[float]:
         """
-        Generate embedding for a single text.
+        Generate embedding for a query text.
 
         Args:
-            text: Input text
+            text: Query text to embed
 
         Returns:
             Embedding vector
         """
         return self.embedding_model.embed_query(text)
 
-    def embed_texts(self, texts: list[str]) -> list[list[float]]:
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """
-        Generate embeddings for multiple texts.
+        Generate embeddings for multiple documents.
 
         Args:
-            texts: List of input texts
+            texts: List of document texts to embed
 
         Returns:
             List of embedding vectors
         """
         return self.embedding_model.embed_documents(texts)
 
-    async def aembed_text(self, text: str) -> list[float]:
+    async def aembed_query(self, text: str) -> list[float]:
         """
-        Asynchronously generate embedding for a single text.
+        Asynchronously generate embedding for a query text.
 
         Args:
-            text: Input text
+            text: Query text to embed
 
         Returns:
             Embedding vector
         """
         return await self.embedding_model.aembed_query(text)
 
-    async def aembed_texts(self, texts: list[str]) -> list[list[float]]:
+    async def aembed_documents(self, texts: list[str]) -> list[list[float]]:
         """
-        Asynchronously generate embeddings for multiple texts.
+        Asynchronously generate embeddings for multiple documents.
 
         Args:
-            texts: List of input texts
+            texts: List of document texts to embed
 
         Returns:
             List of embedding vectors
@@ -153,138 +96,176 @@ class OpenAIEmbeddingGenerator(BaseEmbeddingGenerator):
             api_key=api_key
         )
 
-    def embed_text(self, text: str) -> list[float]:
+    def embed_query(self, text: str) -> list[float]:
         """
-        Generate embedding for a single text.
+        Generate embedding for a query text.
 
         Args:
-            text: Input text
+            text: Query text to embed
 
         Returns:
             Embedding vector
         """
         return self.embedding_model.embed_query(text)
 
-    def embed_texts(self, texts: list[str]) -> list[list[float]]:
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """
-        Generate embeddings for multiple texts.
+        Generate embeddings for multiple documents.
 
         Args:
-            texts: List of input texts
+            texts: List of document texts to embed
 
         Returns:
             List of embedding vectors
         """
         return self.embedding_model.embed_documents(texts)
 
-    async def aembed_text(self, text: str) -> list[float]:
+    async def aembed_query(self, text: str) -> list[float]:
         """
-        Asynchronously generate embedding for a single text.
+        Asynchronously generate embedding for a query text.
 
         Args:
-            text: Input text
+            text: Query text to embed
 
         Returns:
             Embedding vector
         """
         return await self.embedding_model.aembed_query(text)
 
-    async def aembed_texts(self, texts: list[str]) -> list[list[float]]:
+    async def aembed_documents(self, texts: list[str]) -> list[list[float]]:
         """
-        Asynchronously generate embeddings for multiple texts.
+        Asynchronously generate embeddings for multiple documents.
 
         Args:
-            texts: List of input texts
+            texts: List of document texts to embed
 
         Returns:
             List of embedding vectors
         """
         return await self.embedding_model.aembed_documents(texts)
 
-class CohereEmbeddingGenerator(BaseEmbeddingGenerator):
-    """
-    Service for generating embeddings from text using Cohere models.
 
-    Supported models:
-    - embed-english-v3.0: English text (1024 dimensions)
-    - embed-multilingual-v3.0: Multilingual text (1024 dimensions)
-    - embed-english-light-v3.0: Faster, lightweight English (384 dimensions)
-    - embed-multilingual-light-v3.0: Faster, lightweight multilingual (384 dimensions)
+class APIEmbeddingGenerator(BaseEmbeddingGenerator):
+    """
+    Service for generating embeddings by calling a local API endpoint.
     """
 
-    def __init__(
-        self,
-        model_name: str = "embed-multilingual-v3.0",
-        api_key: str = None,
-        input_type: str = "search_document"
-    ):
+    def __init__(self, base_url: str = "http://localhost:8000", model_name: str = "text-embedding-3-small", api_key: str = None):
         """
-        Initialize the Cohere embedding generator.
+        Initialize the API embedding generator.
 
         Args:
-            model_name: Name of the Cohere embedding model to use
-            api_key: Cohere API key (if not set in environment)
-            input_type: Type of input text. Options:
-                - "search_document": For documents to be searched over
-                - "search_query": For search queries
-                - "classification": For classification tasks
-                - "clustering": For clustering tasks
+            base_url: Base URL of the API server
+            model_name: Model name to use for embeddings
+            api_key: API key for authentication (if required)
         """
+        self.base_url = base_url
+        self.api_key = api_key
         self.model_name = model_name
-        self.input_type = input_type
-        self.embedding_model = CohereEmbeddings(
-            model=model_name,
-            cohere_api_key=api_key,
-        )
 
-    def embed_text(self, text: str) -> list[float]:
+    def _get_headers(self) -> dict:
         """
-        Generate embedding for a single text.
+        Get headers for API requests.
+
+        Returns:
+            Dictionary of headers
+        """
+        headers = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        return headers
+
+    def _call_api(self, payload: dict) -> dict:
+        """
+        Make a synchronous API call to the embeddings endpoint.
 
         Args:
-            text: Input text
+            payload: Request payload
+
+        Returns:
+            Response data
+        """
+        import requests
+        headers = self._get_headers()
+        response = requests.post(f"{self.base_url}/v1/embeddings", json=payload, headers=headers)
+        response.raise_for_status()
+        return response.json()
+
+    async def _acall_api(self, payload: dict) -> dict:
+        """
+        Make an asynchronous API call to the embeddings endpoint.
+
+        Args:
+            payload: Request payload
+
+        Returns:
+            Response data
+        """
+        async with AsyncClient() as client:
+            headers = self._get_headers()
+            response = await client.post(f"{self.base_url}/v1/embeddings", json=payload, headers=headers)
+            response.raise_for_status()
+            return response.json()
+
+    def embed_query(self, text: str) -> list[float]:
+        """
+        Generate embedding for a query text by calling the API.
+
+        Args:
+            text: Query text to embed
 
         Returns:
             Embedding vector
         """
-        return self.embedding_model.embed_query(text)
+        payload = {"input": text, "model": self.model_name}
+        print(f"APIEmbeddingGenerator.embed_query payload: {payload}")
+        data = self._call_api(payload)
+        return data['data'][0]['embedding']
 
-    def embed_texts(self, texts: list[str]) -> list[list[float]]:
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """
-        Generate embeddings for multiple texts.
+        Generate embeddings for multiple documents by calling the API.
 
         Args:
-            texts: List of input texts
+            texts: List of document texts to embed
 
         Returns:
             List of embedding vectors
         """
-        return self.embedding_model.embed_documents(texts)
+        payload = {"input": texts, "model": self.model_name}
+        print(f"APIEmbeddingGenerator.embed_documents payload: {payload}")
+        data = self._call_api(payload)
+        return [item['embedding'] for item in data['data']]
 
-    async def aembed_text(self, text: str) -> list[float]:
+    async def aembed_query(self, text: str) -> list[float]:
         """
-        Asynchronously generate embedding for a single text.
+        Asynchronously generate embedding for a query text by calling the API.
 
         Args:
-            text: Input text
+            text: Query text to embed
 
         Returns:
             Embedding vector
         """
-        return await self.embedding_model.aembed_query(text)
+        payload = {"input": text, "model": self.model_name}
+        print(f"APIEmbeddingGenerator.aembed_query payload: {payload}")
+        data = await self._acall_api(payload)
+        return data['data'][0]['embedding']
 
-    async def aembed_texts(self, texts: list[str]) -> list[list[float]]:
+    async def aembed_documents(self, texts: list[str]) -> list[list[float]]:
         """
-        Asynchronously generate embeddings for multiple texts.
+        Asynchronously generate embeddings for multiple documents by calling the API.
 
         Args:
-            texts: List of input texts
+            texts: List of document texts to embed
 
         Returns:
             List of embedding vectors
         """
-        return await self.embedding_model.aembed_documents(texts)
-
+        payload = {"input": texts, "model": self.model_name}
+        print(f"APIEmbeddingGenerator.aembed_documents input length: {payload.get('input') and len(payload['input'])}")
+        data = await self._acall_api(payload)
+        return [item['embedding'] for item in data['data']]
 
 
 # Backward compatibility alias

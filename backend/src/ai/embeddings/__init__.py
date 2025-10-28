@@ -7,7 +7,6 @@ This module provides classes for generating embeddings using different providers
 
 from .generate_embedding import (
     BaseEmbeddingGenerator,
-    CohereEmbeddingGenerator,
     GoogleEmbeddingGenerator,
     OpenAIEmbeddingGenerator,
 )
@@ -23,7 +22,6 @@ from .token_calculator import TokenCalculator
 __all__ = [
     "BaseEmbeddingGenerator",
     "GoogleEmbeddingGenerator",
-    "CohereEmbeddingGenerator",
     "OpenAIEmbeddingGenerator",
     "RateLimiter",
     "BatchRateLimiter",

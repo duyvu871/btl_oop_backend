@@ -2,6 +2,7 @@
 Qdrant vector store service for managing collections and documents.
 """
 
+import uuid
 
 from langchain_core.embeddings import Embeddings
 from langchain_qdrant import QdrantVectorStore
@@ -106,7 +107,6 @@ class QdrantStore:
 
         # Generate IDs if not provided
         if ids is None:
-            import uuid
             ids = [str(uuid.uuid4()) for _ in documents]
 
         # Create points with embeddings

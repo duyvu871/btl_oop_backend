@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import func, select
 
-from src.ai.embeddings.generate_embedding import EmbeddingGenerator
+from src.ai.embeddings.generate_embedding import APIEmbeddingGenerator
 from src.ai.embeddings.qdrant_store import QdrantStore
 from src.ai.embeddings.rate_limiter import BatchRateLimiter
 from src.ai.embeddings.token_calculator import TokenCalculator
@@ -34,7 +34,7 @@ async def main():
         total_count = total_recipes.scalar()
         print(f"Found {total_count} recipes in the database.")
 
-        batch_size = 200
+        batch_size = 10
         all_recipes = []
         offset = 0
         while True:
@@ -46,15 +46,16 @@ async def main():
             offset += batch_size
 
         # Initialize services using the new classes
-        embedding_generator = EmbeddingGenerator(
-            model_name="text-embedding-004",
+        embedding_generator = APIEmbeddingGenerator(
+            model_name=settings.EMBEDDING_MODEL,
+            base_url="http://192.168.1.124:8000",
             api_key=settings.GOOGLE_API_KEY,
         )
         qdrant_client = QdrantClient(url=settings.QDRANT_URL)
         qdrant_store = QdrantStore(
             client=qdrant_client,
             collection_name=settings.QDRANT_RECIPE_COLLECTION,
-            embedding_model=embedding_generator.embedding_model,
+            embedding_model=embedding_generator,
             vector_size=768,
         )
         qdrant_store.ensure_collection_exists(recreate=True)  # Recreate collection
@@ -134,7 +135,7 @@ async def main():
         print("=" * 70 + "\n")
 
         # Calculate optimal batch size and processing time
-        batch_size_vector = 100  # Items per batch
+        batch_size_vector = 1  # Items per batch
         num_batches = (len(all_chunks) + batch_size_vector - 1) // batch_size_vector
 
         # Get processing estimate
@@ -159,9 +160,12 @@ async def main():
 
             batch_chunks = all_chunks[i:i + batch_size_vector]
             batch_ids = all_ids[i:i + batch_size_vector]
-
-            await qdrant_store.add_documents(
+            embedded_vectors = await embedding_generator.aembed_documents(
+                [doc.page_content for doc in batch_chunks]
+            )
+            await qdrant_store.add_documents_with_embeddings(
                 documents=batch_chunks,
+                embeddings=embedded_vectors,
                 ids=batch_ids
             )
 
