@@ -244,8 +244,8 @@ jobs:
             echo "restarting services to apply new images"
             docker compose -f docker-compose.prod.yml restart
             
-            echo "👑 Seeding initial superuser"
-            docker compose -f docker-compose.prod.yml exec fastapi uv run python scripts/seed_admin.py
+            # echo "👑 Seeding initial superuser"
+            # docker compose -f docker-compose.prod.yml exec fastapi uv run python scripts/seed_admin.py
             
             echo "⏳ Waiting for services to start..."
             sleep 15

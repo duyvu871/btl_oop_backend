@@ -7,7 +7,7 @@ from qdrant_client import QdrantClient, models
 # Add the project root to the path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.ai.embeddings.generate_embedding import EmbeddingGenerator
+from src.ai.embeddings.generate_embedding import EmbeddingGenerator, APIEmbeddingGenerator
 from src.ai.embeddings.qdrant_store import QdrantStore
 from src.ai.embeddings.search import RecipeSearch
 from src.settings.env import settings
@@ -16,12 +16,16 @@ from src.settings.env import settings
 async def main():
     """Main function to demonstrate similarity search."""
     # Initialize services using the new classes
-    embedding_generator = EmbeddingGenerator(model_name="gemini-embedding-001", api_key=settings.GOOGLE_API_KEY)
+    embedding_generator = APIEmbeddingGenerator(
+            model_name=settings.EMBEDDING_MODEL,
+            base_url="http://192.168.1.124:8000",
+            api_key=settings.GOOGLE_API_KEY,
+        )
     qdrant_client = QdrantClient(url=settings.QDRANT_URL)
     qdrant_store = QdrantStore(
         client=qdrant_client,
         collection_name=settings.QDRANT_RECIPE_COLLECTION,
-        embedding_model=embedding_generator.embedding_model
+        embedding_model=embedding_generator
     )
     search_engine = RecipeSearch(qdrant_store)
 

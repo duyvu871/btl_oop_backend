@@ -34,7 +34,7 @@ async def main():
         total_count = total_recipes.scalar()
         print(f"Found {total_count} recipes in the database.")
 
-        batch_size = 10
+        batch_size = 100
         all_recipes = []
         offset = 0
         while True:
@@ -61,7 +61,7 @@ async def main():
         qdrant_store.ensure_collection_exists(recreate=True)  # Recreate collection
 
         # Initialize rate limiter for 95 requests per minute
-        rate_limiter = BatchRateLimiter(max_requests_per_minute=50)
+        rate_limiter = BatchRateLimiter(max_requests_per_minute=2000)
         print(f"\n⚙️  Rate limiter configured: {rate_limiter.max_requests_per_minute} RPM")
 
         # Initialize splitter
@@ -135,7 +135,7 @@ async def main():
         print("=" * 70 + "\n")
 
         # Calculate optimal batch size and processing time
-        batch_size_vector = 1  # Items per batch
+        batch_size_vector = 20  # Reduced from 50 to 20 for better stability
         num_batches = (len(all_chunks) + batch_size_vector - 1) // batch_size_vector
 
         # Get processing estimate

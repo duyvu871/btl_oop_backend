@@ -201,7 +201,7 @@ class APIEmbeddingGenerator(BaseEmbeddingGenerator):
         Returns:
             Response data
         """
-        async with AsyncClient() as client:
+        async with AsyncClient(timeout=120.0) as client:  # Increased timeout to 120 seconds
             headers = self._get_headers()
             response = await client.post(f"{self.base_url}/v1/embeddings", json=payload, headers=headers)
             response.raise_for_status()
@@ -218,7 +218,7 @@ class APIEmbeddingGenerator(BaseEmbeddingGenerator):
             Embedding vector
         """
         payload = {"input": text, "model": self.model_name}
-        print(f"APIEmbeddingGenerator.embed_query payload: {payload}")
+        # print(f"APIEmbeddingGenerator.embed_query payload: {payload}")
         data = self._call_api(payload)
         return data['data'][0]['embedding']
 
@@ -233,7 +233,7 @@ class APIEmbeddingGenerator(BaseEmbeddingGenerator):
             List of embedding vectors
         """
         payload = {"input": texts, "model": self.model_name}
-        print(f"APIEmbeddingGenerator.embed_documents payload: {payload}")
+        # print(f"APIEmbeddingGenerator.embed_documents payload: {payload}")
         data = self._call_api(payload)
         return [item['embedding'] for item in data['data']]
 
@@ -248,7 +248,7 @@ class APIEmbeddingGenerator(BaseEmbeddingGenerator):
             Embedding vector
         """
         payload = {"input": text, "model": self.model_name}
-        print(f"APIEmbeddingGenerator.aembed_query payload: {payload}")
+        # print(f"APIEmbeddingGenerator.aembed_query payload: {payload}")
         data = await self._acall_api(payload)
         return data['data'][0]['embedding']
 
@@ -263,7 +263,7 @@ class APIEmbeddingGenerator(BaseEmbeddingGenerator):
             List of embedding vectors
         """
         payload = {"input": texts, "model": self.model_name}
-        print(f"APIEmbeddingGenerator.aembed_documents input length: {payload.get('input') and len(payload['input'])}")
+        # print(f"APIEmbeddingGenerator.aembed_documents input length: {payload.get('input') and len(payload['input'])}")
         data = await self._acall_api(payload)
         return [item['embedding'] for item in data['data']]
 
