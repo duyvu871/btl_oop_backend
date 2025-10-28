@@ -15,7 +15,7 @@ class GoogleEmbeddingGenerator(BaseEmbeddingGenerator):
     Service for generating embeddings from text using Google AI models.
     """
 
-    def __init__(self, model_name: str = "text-embedding-004", api_key: str = None):
+    def __init__(self, model_name: str = "text-embedding-004", api_key: str = None, output_dimensionality: int = None):
         """
         Initialize the embedding generator.
 
@@ -25,8 +25,9 @@ class GoogleEmbeddingGenerator(BaseEmbeddingGenerator):
         """
         self.embedding_model = GoogleGenerativeAIEmbeddings(
             model=model_name,
-            google_api_key=api_key
+            google_api_key=api_key,
         )
+        self.output_dimensionality = output_dimensionality
 
     def embed_query(self, text: str) -> list[float]:
         """
@@ -38,7 +39,7 @@ class GoogleEmbeddingGenerator(BaseEmbeddingGenerator):
         Returns:
             Embedding vector
         """
-        return self.embedding_model.embed_query(text)
+        return self.embedding_model.embed_query(text, output_dimensionality=self.output_dimensionality)
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """
@@ -50,7 +51,7 @@ class GoogleEmbeddingGenerator(BaseEmbeddingGenerator):
         Returns:
             List of embedding vectors
         """
-        return self.embedding_model.embed_documents(texts)
+        return self.embedding_model.embed_documents(texts,output_dimensionality=self.output_dimensionality)
 
     async def aembed_query(self, text: str) -> list[float]:
         """
@@ -62,7 +63,7 @@ class GoogleEmbeddingGenerator(BaseEmbeddingGenerator):
         Returns:
             Embedding vector
         """
-        return await self.embedding_model.aembed_query(text)
+        return await self.embedding_model.aembed_query(text, output_dimensionality=self.output_dimensionality)
 
     async def aembed_documents(self, texts: list[str]) -> list[list[float]]:
         """
@@ -74,7 +75,7 @@ class GoogleEmbeddingGenerator(BaseEmbeddingGenerator):
         Returns:
             List of embedding vectors
         """
-        return await self.embedding_model.aembed_documents(texts)
+        return await self.embedding_model.aembed_documents(texts, output_dimensionality=self.output_dimensionality)
 
 
 class OpenAIEmbeddingGenerator(BaseEmbeddingGenerator):
