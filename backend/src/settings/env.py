@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     GOOGLE_API_KEY: str
     EMBEDDING_MODEL: str = "text-embedding-3-small"
+    EMBEDDING_MODEL_DIM: int = 1536
+    EMBEDDING_BASE_URL: str = "http://localhost:8000"
     COMPLETION_MODEL: str = "gpt-3.5-turbo"
     RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
@@ -42,6 +44,7 @@ class Settings(BaseSettings):
     SMTP_HOST: str | None = None
     SMTP_USER: str | None = None
     SMTP_PASSWORD: str | None = None
+    SMTP_FROM: str | None = None
     EMAILS_FROM_EMAIL: str | None = None
     EMAILS_FROM_NAME: str | None = None
 
