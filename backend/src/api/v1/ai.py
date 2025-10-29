@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload
 
 from src.ai.chains.completion import LLMConfig
 from src.ai.chains.rag import RAGInput, SimpleRAGChain
-from src.ai.embeddings.generate_embedding import GoogleEmbeddingGenerator
+from src.ai.embeddings.generate_embedding import GoogleEmbeddingGenerator, APIEmbeddingGenerator
 from src.ai.embeddings.qdrant_store import QdrantStore
 from src.ai.embeddings.search import RecipeSearch
 from src.core.database.database import get_db
@@ -39,10 +39,16 @@ async def get_rag_chain() -> SimpleRAGChain:
         settings = get_settings()
 
         # Initialize embedding generator
-        embedding_generator = GoogleEmbeddingGenerator(
-            model_name="text-embedding-004",
-            api_key=settings.GOOGLE_API_KEY,
-            output_dimensionality=768,
+        # embedding_generator = GoogleEmbeddingGenerator(
+        #     model_name="text-embedding-004",
+        #     api_key=settings.GOOGLE_API_KEY,
+        #     output_dimensionality=768,
+        # )
+
+        embedding_generator = APIEmbeddingGenerator(
+            model_name=settings.EMBEDDING_MODEL,
+            base_url=settings.EMBEDDING_BASE_URL,
+            api_key=settings.EMBEDDING_API_KEY
         )
 
         # Initialize Qdrant store

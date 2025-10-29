@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     GOOGLE_API_KEY: str
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     EMBEDDING_MODEL_DIM: int = 1536
+    EMBEDDING_API_KEY: str | None = None
     EMBEDDING_BASE_URL: str = "http://localhost:8000"
     COMPLETION_MODEL: str = "gpt-3.5-turbo"
     RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
