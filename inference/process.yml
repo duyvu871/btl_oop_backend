@@ -13,5 +13,5 @@ apps:
       MODEL_ID: bkai-foundation-models/vietnamese-bi-encoder
       DEVICE: cpu
       API_KEY: sk-local-123
-      HF_HOME: /root/.cache/huggingface
+      HF_HOME: /var/cache/huggingface
       LOG_LEVEL: info
