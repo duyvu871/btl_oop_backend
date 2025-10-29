@@ -135,7 +135,7 @@ class SimpleRAGChain:
 
 Trả lời súc tích, chỉ bao gồm những thông tin cần thiết cho việc tìm kiếm.
 
-viết theo format: <Cách làm|Nguyên liệu>: <tên món nếu có> <các nguyên liệu>, <Loại món ăn>, <Yêu cầu đặc biệt>."""
+viết theo format: <Cách làm|Nguyên liệu>: <tên món nếu có> <các nguyên liệu nếu có>, <Loại món ăn nếu có>, <Yêu cầu đặc biệt nếu có>."""
 
     @staticmethod
     def _get_default_final_system_prompt() -> str:
