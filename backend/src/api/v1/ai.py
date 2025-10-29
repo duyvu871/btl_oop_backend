@@ -106,7 +106,7 @@ async def recommend(
         "query": request.query,
         "top_k": 10,
         "score_threshold": 0.1,
-        "rerank_top_k": 5
+        "rerank_top_k": 6
     }
 
     rag_result = await rag_chain.ainvoke(rag_input)
@@ -115,6 +115,8 @@ async def recommend(
     recipe_ids = [doc.metadata.get('id') for doc in rag_result.reranked_docs]
     print(f"recipe_ids: {recipe_ids}")
     # print(f"reranked_docs: {rag_result.reranked_docs}")
+
+    print(f"Fetched {[recipe.title for recipe in rag_result.reranked_docs]} recipes from DB.")
 
     if not recipe_ids:
         # No recipes found, return empty list or default recommendations

@@ -133,7 +133,9 @@ class SimpleRAGChain:
 3. Xác định các yêu cầu đặc biệt
 4. Tạo một query tối ưu để tìm kiếm công thức nấu ăn
 
-Trả lời súc tích, chỉ bao gồm những thông tin cần thiết cho việc tìm kiếm."""
+Trả lời súc tích, chỉ bao gồm những thông tin cần thiết cho việc tìm kiếm. 
+
+viết theo format: <Cách làm|Nguyên liệu>: <tên món nếu có> <các nguyên liệu>, <Loại món ăn>, <Yêu cầu đặc biệt>."""
 
     @staticmethod
     def _get_default_final_system_prompt() -> str:

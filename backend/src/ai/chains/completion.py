@@ -16,6 +16,10 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 class ModelName(str, Enum):
     """Các models của Google Gemini."""
+    GEMINI_FLASH_LATEST = "gemini-flash-latest"
+    GEMINI_2_5_PRO = "gemini-2.5-pro"
+    GEMINI_2_5_FLASH = "gemini-2.5-flash"
+    GEMINI_2_0_PRO = "gemini-2.0-pro"
     GEMINI_2_0_FLASH = "gemini-2.0-flash"
     GEMINI_1_5_PRO = "gemini-1.5-pro"
     GEMINI_1_5_FLASH = "gemini-1.5-flash"
@@ -33,7 +37,7 @@ class LLMConfig:
         top_k: Top-k sampling
         api_key: Google API key
     """
-    model_name: ModelName = ModelName.GEMINI_2_0_FLASH
+    model_name: ModelName = ModelName.GEMINI_2_5_FLASH
     temperature: float = 0.7
     max_output_tokens: int = 2048
     top_p: float = 0.95

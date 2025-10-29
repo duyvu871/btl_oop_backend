@@ -17,10 +17,10 @@ async def main():
     """Main function to demonstrate similarity search."""
     # Initialize services using the new classes
     embedding_generator = APIEmbeddingGenerator(
-            model_name=settings.EMBEDDING_MODEL,
-            base_url="http://192.168.1.124:8000",
-            api_key=settings.GOOGLE_API_KEY,
-        )
+        model_name=settings.EMBEDDING_MODEL,
+        base_url=settings.EMBEDDING_BASE_URL,
+        api_key=settings.EMBEDDING_API_KEY
+    )
     qdrant_client = QdrantClient(url=settings.QDRANT_URL)
     qdrant_store = QdrantStore(
         client=qdrant_client,
