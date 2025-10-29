@@ -29,8 +29,7 @@ app = FastAPI(title="OpenAI-compatible Embeddings (BKAI)")
 print("app oke")
 print(f"device {DEVICE}")
 # ====== Model load ======
-if torch.cuda.is_available():
-
+if DEVICE == "cuda":
     torch.set_float32_matmul_precision("high")
     try:
         torch.backends.cudnn.conv.fp32_precision = "tf32"
