@@ -13,14 +13,14 @@ app = FastAPI(
 )
 
 # Configure CORS middleware
-if len(settings.CORS_ORIGINS) > 0:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.CORS_ORIGINS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# if len(settings.CORS_ORIGINS) > 0:
+#     app.add_middleware(
+#         CORSMiddleware,
+#         allow_origins=settings.CORS_ORIGINS,
+#         allow_credentials=True,
+#         allow_methods=["*"],
+#         allow_headers=["*"],
+#     )
 
 
 # Health check endpoint
