@@ -1,7 +1,7 @@
 apps:
   - name: embedding-server
     script: uv
-    args: run uvicorn main:app --host 0.0.0.0 --port 8000
+    args: run uvicorn main:app --host 0.0.0.0 --port 8001
     interpreter: none            # không dùng Node, vì đây là lệnh hệ thống
     cwd: .       # thư mục chứa app.py hoặc code chính
     watch: false                 # bật true nếu muốn reload khi file thay đổi
