@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload
 
 from src.ai.chains.completion import LLMConfig
 from src.ai.chains.rag import RAGInput, SimpleRAGChain
-from src.ai.embeddings.generate_embedding import GoogleEmbeddingGenerator, APIEmbeddingGenerator
+from src.ai.embeddings.generate_embedding import APIEmbeddingGenerator
 from src.ai.embeddings.qdrant_store import QdrantStore
 from src.ai.embeddings.search import RecipeSearch
 from src.core.database.database import get_db

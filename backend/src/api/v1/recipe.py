@@ -13,19 +13,6 @@ router = APIRouter(
     tags=["recipe"],
 )
 
-@router.get("/{recipe_id}", response_model=RecipeRead)
-async def get_recipe(
-    recipe_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    helper = Depends(get_recipe_usecase)
-):
-    """Get a recipe by ID."""
-    recipe = await helper.get_recipe(db, recipe_id)
-    if not recipe:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found")
-    return recipe
-
-
 @router.get("/search", response_model=SearchResponse)
 async def search_recipes(
     q: str = Query(..., min_length=1, max_length=100),
@@ -37,3 +24,16 @@ async def search_recipes(
     """Search recipes by title or ingredients with pagination."""
     result = await helper.search_recipes(db, q, page, size)
     return SearchResponse(recipes=cast("list[RecipeRead]", result["recipes"]), total=result["total"])
+
+
+@router.get("/{recipe_id}", response_model=RecipeRead)
+async def get_recipe(
+    recipe_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    helper = Depends(get_recipe_usecase)
+):
+    """Get a recipe by ID."""
+    recipe = await helper.get_recipe(db, recipe_id)
+    if not recipe:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found")
+    return recipe
