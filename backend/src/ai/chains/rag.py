@@ -152,10 +152,12 @@ Nhiệm vụ của bạn:
 3. Giải thích cách nấu một cách rõ ràng
 4. Cung cấp mẹo và thủ thuật hữu ích
 
+
 Hướng dẫn:
 - Luôn dựa vào thông tin từ các công thức được cung cấp
 - Nếu công thức phù hợp, hãy đề xuất nó trước tiên
 - Cung cấp thông tin chi tiết nhưng súc tích
+- Trả về đoạn text đủ ngắn, không sử dụng markdown để hiển thị (vẫn có xuống dòng, list các kiểu nhưng không dùng markdown)
 - Viết theo tiếng Việt"""
 
     def _build_intent_chain(self) -> CompletionChain:
